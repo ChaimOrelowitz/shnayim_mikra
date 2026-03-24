@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { AliyahView } from '@/components/AliyahView';
 
+export const dynamic = 'force-dynamic';
+
 interface AliyahPageProps {
   params: Promise<{ id: string }>;
 }

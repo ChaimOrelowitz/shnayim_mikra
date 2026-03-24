@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ParshaPageContent } from '@/components/ParshaPageContent';
 
+export const dynamic = 'force-dynamic';
+
 interface ParshaPageProps {
   params: Promise<{ id: string }>;
 }
