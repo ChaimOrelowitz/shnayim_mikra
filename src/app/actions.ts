@@ -178,38 +178,37 @@ export async function updatePasukProgress(
   revalidatePath('/aliyah/[id]', 'page');
 }
 
+function getSupabase() {
+  const { createClient } = require('@supabase/supabase-js');
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
 export async function uploadPDF(aliyahId: string, formData: FormData) {
   const file = formData.get('file') as File;
-  
-  if (!file) {
-    throw new Error('No file provided');
-  }
 
-  // Create uploads directory if it doesn't exist
-  const fs = await import('fs/promises');
-  const path = await import('path');
-  
-  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-  
-  try {
-    await fs.access(uploadsDir);
-  } catch {
-    await fs.mkdir(uploadsDir, { recursive: true });
-  }
+  if (!file) throw new Error('No file provided');
 
-  // Generate unique filename
   const timestamp = Date.now();
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const filename = `${timestamp}_${sanitizedName}`;
-  const filepath = path.join(uploadsDir, filename);
+  const filename = `${aliyahId}/${timestamp}_${sanitizedName}`;
 
-  // Save file
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  await fs.writeFile(filepath, buffer);
 
-  // Update aliyah with PDF path
-  const pdfPath = `/uploads/${filename}`;
+  const supabase = getSupabase();
+  const { error } = await supabase.storage.from('pdfs').upload(filename, buffer, {
+    contentType: 'application/pdf',
+    upsert: true,
+  });
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage.from('pdfs').getPublicUrl(filename);
+  const pdfPath = data.publicUrl;
+
   await prisma.aliyah.update({
     where: { id: aliyahId },
     data: { pdfPath },
@@ -222,24 +221,18 @@ export async function uploadPDF(aliyahId: string, formData: FormData) {
 }
 
 export async function removePDF(aliyahId: string) {
-  const aliyah = await prisma.aliyah.findUnique({
-    where: { id: aliyahId },
-  });
+  const aliyah = await prisma.aliyah.findUnique({ where: { id: aliyahId } });
 
   if (aliyah?.pdfPath) {
-    // Delete file from filesystem
-    const fs = await import('fs/promises');
-    const path = await import('path');
-    const filepath = path.join(process.cwd(), 'public', aliyah.pdfPath);
-    
-    try {
-      await fs.unlink(filepath);
-    } catch (error) {
-      console.error('Error deleting file:', error);
+    const supabase = getSupabase();
+    // Extract the storage path from the public URL
+    const url = new URL(aliyah.pdfPath);
+    const storagePath = url.pathname.split('/object/public/pdfs/')[1];
+    if (storagePath) {
+      await supabase.storage.from('pdfs').remove([storagePath]);
     }
   }
 
-  // Remove PDF path from database
   await prisma.aliyah.update({
     where: { id: aliyahId },
     data: { pdfPath: null },
