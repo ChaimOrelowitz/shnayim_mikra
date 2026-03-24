@@ -94,6 +94,23 @@ export async function updateAliyahProgress(
   revalidatePath('/aliyah/[id]', 'page');
 }
 
+export async function markParshaComplete(parshaId: string, done: boolean) {
+  const aliyos = await prisma.aliyah.findMany({ where: { parshaId } });
+
+  await prisma.aliyah.updateMany({
+    where: { parshaId },
+    data: { done, mikra1: done, mikra2: done, targum: done },
+  });
+
+  await prisma.pasuk.updateMany({
+    where: { aliyahId: { in: aliyos.map((a) => a.id) } },
+    data: { done, mikra1: done, mikra2: done, targum: done },
+  });
+
+  revalidatePath('/');
+  revalidatePath('/parsha/[id]', 'page');
+}
+
 export async function updatePasukProgress(
   pasukId: string,
   field: 'done' | 'mikra1' | 'mikra2' | 'targum',

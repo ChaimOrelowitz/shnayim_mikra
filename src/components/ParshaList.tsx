@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useLanguage } from '@/lib/language';
 import { AliyahCard } from './AliyahCard';
+import { markParshaComplete } from '@/app/actions';
 
 const SEFARIM: { nameHe: string; nameEn: string; min: number; max: number }[] = [
   { nameHe: 'ספר בראשית',  nameEn: 'Bereishit', min: 1,  max: 12 },
@@ -41,6 +42,7 @@ export function ParshaList({ parshiyos }: ParshaListProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   return (
     <div className="min-h-screen bg-parchment-50">
@@ -75,35 +77,60 @@ export function ParshaList({ parshiyos }: ParshaListProps) {
 
                     return (
                       <div key={parsha.id} className="card overflow-hidden">
-                        <button
-                          onClick={() => setExpandedId(isOpen ? null : parsha.id)}
-                          className="w-full p-5 flex items-center justify-between hover:bg-parchment-50 transition-colors text-start"
-                        >
-                          <div>
-                            <h3 className="text-2xl font-hebrew font-semibold text-ink-900">
-                              {parsha.name}
-                            </h3>
-                            <div className="flex gap-1.5 mt-1.5">
-                              {parsha.aliyos.map((a) => (
-                                <div
-                                  key={a.id}
-                                  className={`w-3 h-3 rounded-full transition-colors ${
-                                    a.done ? 'bg-sage-500' : 'bg-parchment-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-
-                          <svg
-                            className={`w-5 h-5 text-ink-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => setExpandedId(isOpen ? null : parsha.id)}
+                            className="flex-1 p-5 flex items-center justify-between hover:bg-parchment-50 transition-colors text-start"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
+                            <div>
+                              <h3 className="text-2xl font-hebrew font-semibold text-ink-900">
+                                {parsha.name}
+                              </h3>
+                              <div className="flex gap-1.5 mt-1.5">
+                                {parsha.aliyos.map((a) => (
+                                  <div
+                                    key={a.id}
+                                    className={`w-3 h-3 rounded-full transition-colors ${
+                                      a.done ? 'bg-sage-500' : 'bg-parchment-300'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+
+                            <svg
+                              className={`w-5 h-5 text-ink-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+
+                          {(() => {
+                            const allDone = parsha.aliyos.every((a) => a.done);
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startTransition(() => markParshaComplete(parsha.id, !allDone));
+                                }}
+                                disabled={isPending}
+                                title={allDone ? (isHe ? 'בטל סימון הושלם' : 'Mark incomplete') : (isHe ? 'סמן הושלם' : 'Mark all done')}
+                                className={`mx-4 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                                  allDone
+                                    ? 'bg-sage-500 text-white hover:bg-sage-600'
+                                    : 'border-2 border-parchment-300 text-parchment-300 hover:border-sage-400 hover:text-sage-400'
+                                }`}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </button>
+                            );
+                          })()}
+                        </div>
 
                         {isOpen && (
                           <div className="border-t border-parchment-200 p-4 space-y-3 bg-parchment-50/50">

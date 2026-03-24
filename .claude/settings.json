@@ -8,7 +8,8 @@
       "Bash(node -e \"console.log\\(require\\(''./node_modules/next/package.json''\\).version\\)\")",
       "Read(//Users/chaimorelowitz/Downloads/**)",
       "Bash(npx tsx:*)",
-      "Bash(ipconfig getifaddr:*)"
+      "Bash(ipconfig getifaddr:*)",
+      "Bash(npx prisma:*)"
     ]
   }
 }
