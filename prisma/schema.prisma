@@ -1,5 +1,4 @@
 // Prisma schema for Shnayim Mikra Tracker
-// Phase 1: Tracking only, no Torah text storage
 
 generator client {
   provider = "prisma-client-js"
@@ -11,9 +10,24 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+model Profile {
+  id        String   @id // matches Supabase auth.users UUID
+  email     String   @unique
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  aliyahProgress UserAliyahProgress[]
+  pasukProgress  UserPasukProgress[]
+}
+
 model Parsha {
   id        String   @id @default(cuid())
-  name      String   // Hebrew name (e.g., "בראשית")
+  name      String
   order     Int      @unique
   aliyos    Aliyah[]
   createdAt DateTime @default(now())
@@ -25,15 +39,10 @@ model Aliyah {
   parshaId String
   parsha   Parsha  @relation(fields: [parshaId], references: [id], onDelete: Cascade)
   number   Int     // 1-7
-  pdfPath  String? // Optional uploaded PDF
-  
-  // Aliyah-level tracking
-  done     Boolean @default(false)
-  mikra1   Boolean @default(false)
-  mikra2   Boolean @default(false)
-  targum   Boolean @default(false)
-  
-  pesukim  Pasuk[]
+  pdfPath  String? // Admin-managed PDF
+
+  pesukim        Pasuk[]
+  userProgress   UserAliyahProgress[]
 
   @@unique([parshaId, number])
 }
@@ -42,14 +51,40 @@ model Pasuk {
   id       String  @id @default(cuid())
   aliyahId String
   aliyah   Aliyah  @relation(fields: [aliyahId], references: [id], onDelete: Cascade)
-  perek    Int     // Perek number
-  pasuk    Int     // Pasuk number
-  
-  // Pasuk-level tracking (same as Aliyah)
-  done     Boolean @default(false)
-  mikra1   Boolean @default(false)
-  mikra2   Boolean @default(false)
-  targum   Boolean @default(false)
+  perek    Int
+  pasuk    Int
+
+  userProgress UserPasukProgress[]
 
   @@unique([aliyahId, perek, pasuk])
+}
+
+model UserAliyahProgress {
+  id       String  @id @default(cuid())
+  userId   String
+  user     Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aliyahId String
+  aliyah   Aliyah  @relation(fields: [aliyahId], references: [id], onDelete: Cascade)
+
+  done   Boolean @default(false)
+  mikra1 Boolean @default(false)
+  mikra2 Boolean @default(false)
+  targum Boolean @default(false)
+
+  @@unique([userId, aliyahId])
+}
+
+model UserPasukProgress {
+  id      String  @id @default(cuid())
+  userId  String
+  user    Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pasukId String
+  pasuk   Pasuk   @relation(fields: [pasukId], references: [id], onDelete: Cascade)
+
+  done   Boolean @default(false)
+  mikra1 Boolean @default(false)
+  mikra2 Boolean @default(false)
+  targum Boolean @default(false)
+
+  @@unique([userId, pasukId])
 }

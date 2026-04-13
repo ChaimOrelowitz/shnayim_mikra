@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useLanguage } from '@/lib/language';
 import { AliyahCard } from './AliyahCard';
-import { markParshaComplete } from '@/app/actions';
+import { markParshaComplete, signOut } from '@/app/actions';
 
 const SEFARIM: { nameHe: string; nameEn: string; min: number; max: number }[] = [
   { nameHe: 'בראשית', nameEn: 'Bereishit', min: 1,  max: 12 },
@@ -32,9 +32,10 @@ interface Parsha {
 
 interface ParshaListProps {
   parshiyos: Parsha[];
+  isAdmin?: boolean;
 }
 
-export function ParshaList({ parshiyos }: ParshaListProps) {
+export function ParshaList({ parshiyos, isAdmin }: ParshaListProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -47,12 +48,26 @@ export function ParshaList({ parshiyos }: ParshaListProps) {
       <div className="min-h-screen bg-parchment-50">
         <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="page-container">
-            <h1 className="text-3xl font-bold text-ink-900 py-6 font-hebrew">
-              שניים מקרא ואחד תרגום
-            </h1>
-            <p className="text-ink-700 pb-6 -mt-2">
-              {isHe ? 'מעקב שניים מקרא ואחד תרגום' : "Shnayim Mikra v'Echad Targum Tracker"}
-            </p>
+            <div className="flex items-center justify-between py-6">
+              <div>
+                <h1 className="text-3xl font-bold text-ink-900 font-hebrew">
+                  שניים מקרא ואחד תרגום
+                </h1>
+                <p className="text-ink-700 mt-1 font-hebrew">
+                  {isHe ? 'מעקב שניים מקרא ואחד תרגום' : "Shnayim Mikra v'Echad Targum Tracker"}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {isAdmin && (
+                  <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Admin</span>
+                )}
+                <form action={signOut}>
+                  <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors font-hebrew">
+                    {isHe ? 'יציאה' : 'Sign out'}
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -181,7 +196,7 @@ export function ParshaList({ parshiyos }: ParshaListProps) {
                 {isOpen && (
                   <div className="border-t border-parchment-200 p-4 space-y-3 bg-parchment-50/50">
                     {parsha.aliyos.map((aliyah) => (
-                      <AliyahCard key={aliyah.id} aliyah={aliyah} parshaId={parsha.id} />
+                      <AliyahCard key={aliyah.id} aliyah={aliyah} parshaId={parsha.id} isAdmin={isAdmin} />
                     ))}
                   </div>
                 )}

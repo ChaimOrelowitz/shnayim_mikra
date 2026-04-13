@@ -1,17 +1,47 @@
 import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { ParshaList } from '@/components/ParshaList';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
+
   const parshiyos = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },
     include: {
       aliyos: {
         orderBy: { number: 'asc' },
+        include: {
+          userProgress: {
+            where: userId ? { userId } : { userId: '' },
+          },
+        },
       },
     },
   });
 
-  return <ParshaList parshiyos={parshiyos} />;
+  const profile = userId
+    ? await prisma.profile.findUnique({ where: { id: userId } })
+    : null;
+
+  const parshiyosWithProgress = parshiyos.map(p => ({
+    ...p,
+    aliyos: p.aliyos.map(a => ({
+      ...a,
+      done: a.userProgress[0]?.done ?? false,
+      mikra1: a.userProgress[0]?.mikra1 ?? false,
+      mikra2: a.userProgress[0]?.mikra2 ?? false,
+      targum: a.userProgress[0]?.targum ?? false,
+    })),
+  }));
+
+  return (
+    <ParshaList
+      parshiyos={parshiyosWithProgress}
+      isAdmin={profile?.role === 'ADMIN'}
+    />
+  );
 }

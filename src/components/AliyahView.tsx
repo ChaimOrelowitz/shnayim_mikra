@@ -24,9 +24,10 @@ interface AliyahViewProps {
     parsha: { name: string };
   };
   pesukim: Pasuk[];
+  isAdmin?: boolean;
 }
 
-export function AliyahView({ aliyah, pesukim }: AliyahViewProps) {
+export function AliyahView({ aliyah, pesukim, isAdmin: _isAdmin }: AliyahViewProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
   const [showPdf, setShowPdf] = useState(false);

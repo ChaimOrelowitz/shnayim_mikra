@@ -20,9 +20,10 @@ interface ParshaPageContentProps {
     name: string;
     aliyos: Aliyah[];
   };
+  isAdmin?: boolean;
 }
 
-export function ParshaPageContent({ parsha }: ParshaPageContentProps) {
+export function ParshaPageContent({ parsha, isAdmin }: ParshaPageContentProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
 
@@ -49,7 +50,7 @@ export function ParshaPageContent({ parsha }: ParshaPageContentProps) {
       <main className="page-container">
         <div className="mt-8 space-y-4">
           {parsha.aliyos.map((aliyah) => (
-            <AliyahCard key={aliyah.id} aliyah={aliyah} parshaId={parsha.id} />
+            <AliyahCard key={aliyah.id} aliyah={aliyah} parshaId={parsha.id} isAdmin={isAdmin} />
           ))}
         </div>
       </main>

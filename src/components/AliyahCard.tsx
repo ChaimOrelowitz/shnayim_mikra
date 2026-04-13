@@ -18,9 +18,10 @@ interface AliyahCardProps {
     pdfPath: string | null;
   };
   parshaId: string;
+  isAdmin?: boolean;
 }
 
-export function AliyahCard({ aliyah, parshaId }: AliyahCardProps) {
+export function AliyahCard({ aliyah, parshaId, isAdmin }: AliyahCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showUploader, setShowUploader] = useState(false);
   const [showPdf, setShowPdf] = useState(false);
@@ -116,38 +117,42 @@ export function AliyahCard({ aliyah, parshaId }: AliyahCardProps) {
                 </svg>
                 <span className="font-hebrew">{isHe ? 'פתח PDF' : 'Open PDF'}</span>
               </button>
+              {isAdmin && (
+                <button
+                  onClick={handleRemovePDF}
+                  disabled={isPending}
+                  className="text-parchment-400 hover:text-red-500 transition-colors"
+                  title="Remove PDF"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </>
+          ) : isAdmin ? (
+            showUploader ? (
+              <div className="w-full mt-2">
+                <PDFUploader
+                  aliyahId={aliyah.id}
+                  onComplete={() => setShowUploader(false)}
+                  onCancel={() => setShowUploader(false)}
+                />
+              </div>
+            ) : (
               <button
-                onClick={handleRemovePDF}
+                onClick={() => setShowUploader(true)}
                 disabled={isPending}
-                className="text-parchment-400 hover:text-red-500 transition-colors"
-                title="Remove PDF"
+                title={isHe ? 'העלה PDF' : 'Upload PDF'}
+                className="flex items-center gap-1 text-xs text-ink-400 hover:text-sage-600 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
+                <span className="font-hebrew">PDF</span>
               </button>
-            </>
-          ) : showUploader ? (
-            <div className="w-full mt-2">
-              <PDFUploader
-                aliyahId={aliyah.id}
-                onComplete={() => setShowUploader(false)}
-                onCancel={() => setShowUploader(false)}
-              />
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowUploader(true)}
-              disabled={isPending}
-              title={isHe ? 'העלה PDF' : 'Upload PDF'}
-              className="flex items-center gap-1 text-xs text-ink-400 hover:text-sage-600 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <span className="font-hebrew">PDF</span>
-            </button>
-          )}
+            )
+          ) : null}
         </div>
       </div>
       {showPdf && aliyah.pdfPath && (

@@ -1,92 +1,114 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+// ─── Auth helpers ────────────────────────────────────────────────────────────
+
+export async function signOut() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect('/login');
+}
+
+async function getRequiredUser() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  return user;
+}
+
+async function getRequiredAdmin() {
+  const user = await getRequiredUser();
+  const profile = await prisma.profile.findUnique({ where: { id: user.id } });
+  if (profile?.role !== 'ADMIN') throw new Error('Not authorized');
+  return user;
+}
+
+// Called after Supabase signup confirmation to create the profile row
+export async function ensureProfile() {
+  const user = await getRequiredUser();
+  await prisma.profile.upsert({
+    where: { id: user.id },
+    update: {},
+    create: { id: user.id, email: user.email! },
+  });
+}
+
+// ─── Progress helpers ─────────────────────────────────────────────────────────
+
+async function getOrCreateAliyahProgress(userId: string, aliyahId: string) {
+  return prisma.userAliyahProgress.upsert({
+    where: { userId_aliyahId: { userId, aliyahId } },
+    update: {},
+    create: { userId, aliyahId },
+  });
+}
+
+async function getOrCreatePasukProgress(userId: string, pasukId: string) {
+  return prisma.userPasukProgress.upsert({
+    where: { userId_pasukId: { userId, pasukId } },
+    update: {},
+    create: { userId, pasukId },
+  });
+}
+
+// ─── Aliyah progress ─────────────────────────────────────────────────────────
 
 export async function updateAliyahProgress(
   aliyahId: string,
   field: 'done' | 'mikra1' | 'mikra2' | 'targum',
   value: boolean
 ) {
+  const user = await getRequiredUser();
+  const userId = user.id;
+
+  await ensureProfile();
+
   if (field === 'done' && value) {
-    // If setting done to true, set all others to true
-    await prisma.aliyah.update({
-      where: { id: aliyahId },
-      data: {
-        done: true,
-        mikra1: true,
-        mikra2: true,
-        targum: true,
-      },
+    await prisma.userAliyahProgress.upsert({
+      where: { userId_aliyahId: { userId, aliyahId } },
+      update: { done: true, mikra1: true, mikra2: true, targum: true },
+      create: { userId, aliyahId, done: true, mikra1: true, mikra2: true, targum: true },
     });
-
-    // Also update all pesukim
-    await prisma.pasuk.updateMany({
-      where: { aliyahId },
-      data: {
-        done: true,
-        mikra1: true,
-        mikra2: true,
-        targum: true,
-      },
-    });
+    const pesukim = await prisma.pasuk.findMany({ where: { aliyahId } });
+    for (const p of pesukim) {
+      await prisma.userPasukProgress.upsert({
+        where: { userId_pasukId: { userId, pasukId: p.id } },
+        update: { done: true, mikra1: true, mikra2: true, targum: true },
+        create: { userId, pasukId: p.id, done: true, mikra1: true, mikra2: true, targum: true },
+      });
+    }
   } else if (field === 'done' && !value) {
-    // If setting done to false, set all others to false
-    await prisma.aliyah.update({
-      where: { id: aliyahId },
-      data: {
-        done: false,
-        mikra1: false,
-        mikra2: false,
-        targum: false,
-      },
+    await prisma.userAliyahProgress.upsert({
+      where: { userId_aliyahId: { userId, aliyahId } },
+      update: { done: false, mikra1: false, mikra2: false, targum: false },
+      create: { userId, aliyahId },
     });
-
-    // Also update all pesukim
-    await prisma.pasuk.updateMany({
-      where: { aliyahId },
-      data: {
-        done: false,
-        mikra1: false,
-        mikra2: false,
-        targum: false,
-      },
-    });
+    const pesukim = await prisma.pasuk.findMany({ where: { aliyahId } });
+    for (const p of pesukim) {
+      await prisma.userPasukProgress.upsert({
+        where: { userId_pasukId: { userId, pasukId: p.id } },
+        update: { done: false, mikra1: false, mikra2: false, targum: false },
+        create: { userId, pasukId: p.id },
+      });
+    }
   } else {
-    // Update the specific field
-    await prisma.aliyah.update({
-      where: { id: aliyahId },
-      data: { [field]: value },
+    const current = await getOrCreateAliyahProgress(userId, aliyahId);
+    const updated = { ...current, [field]: value };
+
+    // If unchecking a field, uncheck done too
+    if (!value) updated.done = false;
+
+    // If all three complete, set done
+    if (updated.mikra1 && updated.mikra2 && updated.targum) updated.done = true;
+
+    await prisma.userAliyahProgress.update({
+      where: { userId_aliyahId: { userId, aliyahId } },
+      data: { [field]: value, done: updated.done },
     });
-
-    // If unchecking any of mikra1, mikra2, or targum, uncheck done
-    if (!value && field !== 'done') {
-      await prisma.aliyah.update({
-        where: { id: aliyahId },
-        data: { done: false },
-      });
-    }
-
-    // If all three are now true, set done to true
-    if (value && field !== 'done') {
-      const aliyah = await prisma.aliyah.findUnique({
-        where: { id: aliyahId },
-      });
-
-      if (aliyah) {
-        const updatedAliyah = { ...aliyah, [field]: value };
-        if (
-          updatedAliyah.mikra1 &&
-          updatedAliyah.mikra2 &&
-          updatedAliyah.targum
-        ) {
-          await prisma.aliyah.update({
-            where: { id: aliyahId },
-            data: { done: true },
-          });
-        }
-      }
-    }
   }
 
   revalidatePath('/');
@@ -95,100 +117,87 @@ export async function updateAliyahProgress(
 }
 
 export async function markParshaComplete(parshaId: string, done: boolean) {
+  const user = await getRequiredUser();
+  const userId = user.id;
+
+  await ensureProfile();
+
   const aliyos = await prisma.aliyah.findMany({ where: { parshaId } });
 
-  await prisma.aliyah.updateMany({
-    where: { parshaId },
-    data: { done, mikra1: done, mikra2: done, targum: done },
-  });
+  for (const aliyah of aliyos) {
+    await prisma.userAliyahProgress.upsert({
+      where: { userId_aliyahId: { userId, aliyahId: aliyah.id } },
+      update: { done, mikra1: done, mikra2: done, targum: done },
+      create: { userId, aliyahId: aliyah.id, done, mikra1: done, mikra2: done, targum: done },
+    });
 
-  await prisma.pasuk.updateMany({
-    where: { aliyahId: { in: aliyos.map((a) => a.id) } },
-    data: { done, mikra1: done, mikra2: done, targum: done },
-  });
+    const pesukim = await prisma.pasuk.findMany({ where: { aliyahId: aliyah.id } });
+    for (const p of pesukim) {
+      await prisma.userPasukProgress.upsert({
+        where: { userId_pasukId: { userId, pasukId: p.id } },
+        update: { done, mikra1: done, mikra2: done, targum: done },
+        create: { userId, pasukId: p.id, done, mikra1: done, mikra2: done, targum: done },
+      });
+    }
+  }
 
   revalidatePath('/');
   revalidatePath('/parsha/[id]', 'page');
 }
+
+// ─── Pasuk progress ───────────────────────────────────────────────────────────
 
 export async function updatePasukProgress(
   pasukId: string,
   field: 'done' | 'mikra1' | 'mikra2' | 'targum',
   value: boolean
 ) {
+  const user = await getRequiredUser();
+  const userId = user.id;
+
+  await ensureProfile();
+
   if (field === 'done' && value) {
-    // If setting done to true, set all others to true
-    await prisma.pasuk.update({
-      where: { id: pasukId },
-      data: {
-        done: true,
-        mikra1: true,
-        mikra2: true,
-        targum: true,
-      },
+    await prisma.userPasukProgress.upsert({
+      where: { userId_pasukId: { userId, pasukId } },
+      update: { done: true, mikra1: true, mikra2: true, targum: true },
+      create: { userId, pasukId, done: true, mikra1: true, mikra2: true, targum: true },
     });
   } else if (field === 'done' && !value) {
-    // If setting done to false, set all others to false
-    await prisma.pasuk.update({
-      where: { id: pasukId },
-      data: {
-        done: false,
-        mikra1: false,
-        mikra2: false,
-        targum: false,
-      },
+    await prisma.userPasukProgress.upsert({
+      where: { userId_pasukId: { userId, pasukId } },
+      update: { done: false, mikra1: false, mikra2: false, targum: false },
+      create: { userId, pasukId },
     });
   } else {
-    // Update the specific field
-    await prisma.pasuk.update({
-      where: { id: pasukId },
-      data: { [field]: value },
+    const current = await getOrCreatePasukProgress(userId, pasukId);
+    const updated = { ...current, [field]: value };
+    if (!value) updated.done = false;
+    if (updated.mikra1 && updated.mikra2 && updated.targum) updated.done = true;
+
+    await prisma.userPasukProgress.update({
+      where: { userId_pasukId: { userId, pasukId } },
+      data: { [field]: value, done: updated.done },
     });
-
-    // If unchecking any of mikra1, mikra2, or targum, uncheck done
-    if (!value && field !== 'done') {
-      await prisma.pasuk.update({
-        where: { id: pasukId },
-        data: { done: false },
-      });
-    }
-
-    // If all three are now true, set done to true
-    if (value && field !== 'done') {
-      const pasuk = await prisma.pasuk.findUnique({
-        where: { id: pasukId },
-      });
-
-      if (pasuk) {
-        const updatedPasuk = { ...pasuk, [field]: value };
-        if (
-          updatedPasuk.mikra1 &&
-          updatedPasuk.mikra2 &&
-          updatedPasuk.targum
-        ) {
-          await prisma.pasuk.update({
-            where: { id: pasukId },
-            data: { done: true },
-          });
-        }
-      }
-    }
   }
 
   revalidatePath('/aliyah/[id]', 'page');
 }
 
-function getSupabase() {
-  const { createClient } = require('@supabase/supabase-js');
-  return createClient(
+// ─── PDF management (admin only) ─────────────────────────────────────────────
+
+function getSupabaseStorage() {
+  const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 }
 
 export async function uploadPDF(aliyahId: string, formData: FormData) {
-  const file = formData.get('file') as File;
+  await getRequiredAdmin();
 
+  const file = formData.get('file') as File;
   if (!file) throw new Error('No file provided');
 
   const timestamp = Date.now();
@@ -198,7 +207,7 @@ export async function uploadPDF(aliyahId: string, formData: FormData) {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  const supabase = getSupabase();
+  const supabase = getSupabaseStorage();
   const { error } = await supabase.storage.from('pdfs').upload(filename, buffer, {
     contentType: 'application/pdf',
     upsert: true,
@@ -207,25 +216,25 @@ export async function uploadPDF(aliyahId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   const { data } = supabase.storage.from('pdfs').getPublicUrl(filename);
-  const pdfPath = data.publicUrl;
 
   await prisma.aliyah.update({
     where: { id: aliyahId },
-    data: { pdfPath },
+    data: { pdfPath: data.publicUrl },
   });
 
   revalidatePath('/parsha/[id]', 'page');
   revalidatePath('/aliyah/[id]', 'page');
 
-  return pdfPath;
+  return data.publicUrl;
 }
 
 export async function removePDF(aliyahId: string) {
+  await getRequiredAdmin();
+
   const aliyah = await prisma.aliyah.findUnique({ where: { id: aliyahId } });
 
   if (aliyah?.pdfPath) {
-    const supabase = getSupabase();
-    // Extract the storage path from the public URL
+    const supabase = getSupabaseStorage();
     const url = new URL(aliyah.pdfPath);
     const storagePath = url.pathname.split('/object/public/pdfs/')[1];
     if (storagePath) {
