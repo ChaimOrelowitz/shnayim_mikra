@@ -59,7 +59,12 @@ export function ParshaList({ parshiyos, isAdmin }: ParshaListProps) {
               </div>
               <div className="flex items-center gap-3">
                 {isAdmin && (
-                  <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Admin</span>
+                  <>
+                    <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Admin</span>
+                    <a href="/admin/upload" className="text-xs text-sage-600 hover:text-sage-700 font-medium transition-colors">
+                      Upload PDFs
+                    </a>
+                  </>
                 )}
                 <form action={signOut}>
                   <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors font-hebrew">
