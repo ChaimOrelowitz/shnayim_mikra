@@ -2,15 +2,19 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { AliyahView } from '@/components/AliyahView';
+import { currentHebrewYear } from '@/lib/hebcal';
 
 export const dynamic = 'force-dynamic';
 
 interface AliyahPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ year?: string }>;
 }
 
-export default async function AliyahPage({ params }: AliyahPageProps) {
+export default async function AliyahPage({ params, searchParams }: AliyahPageProps) {
   const { id } = await params;
+  const { year } = await searchParams;
+  const hebrewYear = year ? parseInt(year, 10) : currentHebrewYear();
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -21,13 +25,13 @@ export default async function AliyahPage({ params }: AliyahPageProps) {
     include: {
       parsha: true,
       userProgress: {
-        where: userId ? { userId } : { userId: '' },
+        where: userId ? { userId, hebrewYear } : { userId: '' },
       },
       pesukim: {
         orderBy: [{ perek: 'asc' }, { pasuk: 'asc' }],
         include: {
           userProgress: {
-            where: userId ? { userId } : { userId: '' },
+            where: userId ? { userId, hebrewYear } : { userId: '' },
           },
         },
       },
@@ -61,6 +65,7 @@ export default async function AliyahPage({ params }: AliyahPageProps) {
       aliyah={aliyahWithProgress}
       pesukim={pasukimWithProgress}
       isAdmin={profile?.role === 'ADMIN'}
+      hebrewYear={hebrewYear}
     />
   );
 }

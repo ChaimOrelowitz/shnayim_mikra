@@ -222,7 +222,7 @@ export function ParshaList({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          startTransition(() => markParshaComplete(parsha.id, !allDone));
+                          startTransition(() => markParshaComplete(parsha.id, !allDone, hebrewYear));
                         }}
                         disabled={isPending}
                         title={allDone ? 'Mark incomplete' : 'Mark all done'}
@@ -270,7 +270,7 @@ export function ParshaList({
                 {isOpen && (
                   <div className="border-t border-parchment-200 p-4 space-y-3 bg-parchment-50/50">
                     {parsha.aliyos.map((aliyah) => (
-                      <AliyahCard key={aliyah.id} aliyah={aliyah} parshaId={parsha.id} isAdmin={isAdmin} />
+                      <AliyahCard key={aliyah.id} aliyah={aliyah} parshaId={parsha.id} isAdmin={isAdmin} hebrewYear={hebrewYear} />
                     ))}
                   </div>
                 )}

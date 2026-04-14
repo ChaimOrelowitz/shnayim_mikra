@@ -19,9 +19,10 @@ interface AliyahCardProps {
   };
   parshaId: string;
   isAdmin?: boolean;
+  hebrewYear: number;
 }
 
-export function AliyahCard({ aliyah, parshaId, isAdmin }: AliyahCardProps) {
+export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showUploader, setShowUploader] = useState(false);
   const [showPdf, setShowPdf] = useState(false);
@@ -30,7 +31,7 @@ export function AliyahCard({ aliyah, parshaId, isAdmin }: AliyahCardProps) {
 
   const handleToggle = (field: 'done' | 'mikra1' | 'mikra2' | 'targum', value: boolean) => {
     startTransition(async () => {
-      await updateAliyahProgress(aliyah.id, field, value);
+      await updateAliyahProgress(aliyah.id, field, value, hebrewYear);
     });
   };
 
@@ -70,7 +71,7 @@ export function AliyahCard({ aliyah, parshaId, isAdmin }: AliyahCardProps) {
         </div>
 
         <Link
-          href={`/aliyah/${aliyah.id}`}
+          href={`/aliyah/${aliyah.id}?year=${hebrewYear}`}
           className="flex items-center gap-1 text-xs text-sage-600 hover:text-sage-700 font-medium font-hebrew"
         >
           {isHe ? (

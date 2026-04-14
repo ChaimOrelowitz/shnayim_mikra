@@ -50,8 +50,8 @@ model Aliyah {
   number   Int     // 1-7
   pdfPath  String? // Admin-managed PDF
 
-  pesukim        Pasuk[]
-  userProgress   UserAliyahProgress[]
+  pesukim      Pasuk[]
+  userProgress UserAliyahProgress[]
 
   @@unique([parshaId, number])
 }
@@ -69,31 +69,33 @@ model Pasuk {
 }
 
 model UserAliyahProgress {
-  id       String  @id @default(cuid())
-  userId   String
-  user     Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  aliyahId String
-  aliyah   Aliyah  @relation(fields: [aliyahId], references: [id], onDelete: Cascade)
+  id         String  @id @default(cuid())
+  userId     String
+  user       Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aliyahId   String
+  aliyah     Aliyah  @relation(fields: [aliyahId], references: [id], onDelete: Cascade)
+  hebrewYear Int     @default(5786)
 
   done   Boolean @default(false)
   mikra1 Boolean @default(false)
   mikra2 Boolean @default(false)
   targum Boolean @default(false)
 
-  @@unique([userId, aliyahId])
+  @@unique([userId, aliyahId, hebrewYear])
 }
 
 model UserPasukProgress {
-  id      String  @id @default(cuid())
-  userId  String
-  user    Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pasukId String
-  pasuk   Pasuk   @relation(fields: [pasukId], references: [id], onDelete: Cascade)
+  id         String  @id @default(cuid())
+  userId     String
+  user       Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pasukId    String
+  pasuk      Pasuk   @relation(fields: [pasukId], references: [id], onDelete: Cascade)
+  hebrewYear Int     @default(5786)
 
   done   Boolean @default(false)
   mikra1 Boolean @default(false)
   mikra2 Boolean @default(false)
   targum Boolean @default(false)
 
-  @@unique([userId, pasukId])
+  @@unique([userId, pasukId, hebrewYear])
 }

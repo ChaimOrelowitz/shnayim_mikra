@@ -92,19 +92,19 @@ export async function exitUserMode() {
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
 
-async function getOrCreateAliyahProgress(userId: string, aliyahId: string) {
+async function getOrCreateAliyahProgress(userId: string, aliyahId: string, hebrewYear: number) {
   return prisma.userAliyahProgress.upsert({
-    where: { userId_aliyahId: { userId, aliyahId } },
+    where: { userId_aliyahId_hebrewYear: { userId, aliyahId, hebrewYear } },
     update: {},
-    create: { userId, aliyahId },
+    create: { userId, aliyahId, hebrewYear },
   });
 }
 
-async function getOrCreatePasukProgress(userId: string, pasukId: string) {
+async function getOrCreatePasukProgress(userId: string, pasukId: string, hebrewYear: number) {
   return prisma.userPasukProgress.upsert({
-    where: { userId_pasukId: { userId, pasukId } },
+    where: { userId_pasukId_hebrewYear: { userId, pasukId, hebrewYear } },
     update: {},
-    create: { userId, pasukId },
+    create: { userId, pasukId, hebrewYear },
   });
 }
 
@@ -113,7 +113,8 @@ async function getOrCreatePasukProgress(userId: string, pasukId: string) {
 export async function updateAliyahProgress(
   aliyahId: string,
   field: 'done' | 'mikra1' | 'mikra2' | 'targum',
-  value: boolean
+  value: boolean,
+  hebrewYear: number
 ) {
   const user = await getRequiredUser();
   const userId = user.id;
@@ -122,44 +123,40 @@ export async function updateAliyahProgress(
 
   if (field === 'done' && value) {
     await prisma.userAliyahProgress.upsert({
-      where: { userId_aliyahId: { userId, aliyahId } },
+      where: { userId_aliyahId_hebrewYear: { userId, aliyahId, hebrewYear } },
       update: { done: true, mikra1: true, mikra2: true, targum: true },
-      create: { userId, aliyahId, done: true, mikra1: true, mikra2: true, targum: true },
+      create: { userId, aliyahId, hebrewYear, done: true, mikra1: true, mikra2: true, targum: true },
     });
     const pesukim = await prisma.pasuk.findMany({ where: { aliyahId } });
     for (const p of pesukim) {
       await prisma.userPasukProgress.upsert({
-        where: { userId_pasukId: { userId, pasukId: p.id } },
+        where: { userId_pasukId_hebrewYear: { userId, pasukId: p.id, hebrewYear } },
         update: { done: true, mikra1: true, mikra2: true, targum: true },
-        create: { userId, pasukId: p.id, done: true, mikra1: true, mikra2: true, targum: true },
+        create: { userId, pasukId: p.id, hebrewYear, done: true, mikra1: true, mikra2: true, targum: true },
       });
     }
   } else if (field === 'done' && !value) {
     await prisma.userAliyahProgress.upsert({
-      where: { userId_aliyahId: { userId, aliyahId } },
+      where: { userId_aliyahId_hebrewYear: { userId, aliyahId, hebrewYear } },
       update: { done: false, mikra1: false, mikra2: false, targum: false },
-      create: { userId, aliyahId },
+      create: { userId, aliyahId, hebrewYear },
     });
     const pesukim = await prisma.pasuk.findMany({ where: { aliyahId } });
     for (const p of pesukim) {
       await prisma.userPasukProgress.upsert({
-        where: { userId_pasukId: { userId, pasukId: p.id } },
+        where: { userId_pasukId_hebrewYear: { userId, pasukId: p.id, hebrewYear } },
         update: { done: false, mikra1: false, mikra2: false, targum: false },
-        create: { userId, pasukId: p.id },
+        create: { userId, pasukId: p.id, hebrewYear },
       });
     }
   } else {
-    const current = await getOrCreateAliyahProgress(userId, aliyahId);
+    const current = await getOrCreateAliyahProgress(userId, aliyahId, hebrewYear);
     const updated = { ...current, [field]: value };
-
-    // If unchecking a field, uncheck done too
     if (!value) updated.done = false;
-
-    // If all three complete, set done
     if (updated.mikra1 && updated.mikra2 && updated.targum) updated.done = true;
 
     await prisma.userAliyahProgress.update({
-      where: { userId_aliyahId: { userId, aliyahId } },
+      where: { userId_aliyahId_hebrewYear: { userId, aliyahId, hebrewYear } },
       data: { [field]: value, done: updated.done },
     });
   }
@@ -169,7 +166,7 @@ export async function updateAliyahProgress(
   revalidatePath('/aliyah/[id]', 'page');
 }
 
-export async function markParshaComplete(parshaId: string, done: boolean) {
+export async function markParshaComplete(parshaId: string, done: boolean, hebrewYear: number) {
   const user = await getRequiredUser();
   const userId = user.id;
 
@@ -179,17 +176,17 @@ export async function markParshaComplete(parshaId: string, done: boolean) {
 
   for (const aliyah of aliyos) {
     await prisma.userAliyahProgress.upsert({
-      where: { userId_aliyahId: { userId, aliyahId: aliyah.id } },
+      where: { userId_aliyahId_hebrewYear: { userId, aliyahId: aliyah.id, hebrewYear } },
       update: { done, mikra1: done, mikra2: done, targum: done },
-      create: { userId, aliyahId: aliyah.id, done, mikra1: done, mikra2: done, targum: done },
+      create: { userId, aliyahId: aliyah.id, hebrewYear, done, mikra1: done, mikra2: done, targum: done },
     });
 
     const pesukim = await prisma.pasuk.findMany({ where: { aliyahId: aliyah.id } });
     for (const p of pesukim) {
       await prisma.userPasukProgress.upsert({
-        where: { userId_pasukId: { userId, pasukId: p.id } },
+        where: { userId_pasukId_hebrewYear: { userId, pasukId: p.id, hebrewYear } },
         update: { done, mikra1: done, mikra2: done, targum: done },
-        create: { userId, pasukId: p.id, done, mikra1: done, mikra2: done, targum: done },
+        create: { userId, pasukId: p.id, hebrewYear, done, mikra1: done, mikra2: done, targum: done },
       });
     }
   }
@@ -203,7 +200,8 @@ export async function markParshaComplete(parshaId: string, done: boolean) {
 export async function updatePasukProgress(
   pasukId: string,
   field: 'done' | 'mikra1' | 'mikra2' | 'targum',
-  value: boolean
+  value: boolean,
+  hebrewYear: number
 ) {
   const user = await getRequiredUser();
   const userId = user.id;
@@ -212,24 +210,24 @@ export async function updatePasukProgress(
 
   if (field === 'done' && value) {
     await prisma.userPasukProgress.upsert({
-      where: { userId_pasukId: { userId, pasukId } },
+      where: { userId_pasukId_hebrewYear: { userId, pasukId, hebrewYear } },
       update: { done: true, mikra1: true, mikra2: true, targum: true },
-      create: { userId, pasukId, done: true, mikra1: true, mikra2: true, targum: true },
+      create: { userId, pasukId, hebrewYear, done: true, mikra1: true, mikra2: true, targum: true },
     });
   } else if (field === 'done' && !value) {
     await prisma.userPasukProgress.upsert({
-      where: { userId_pasukId: { userId, pasukId } },
+      where: { userId_pasukId_hebrewYear: { userId, pasukId, hebrewYear } },
       update: { done: false, mikra1: false, mikra2: false, targum: false },
-      create: { userId, pasukId },
+      create: { userId, pasukId, hebrewYear },
     });
   } else {
-    const current = await getOrCreatePasukProgress(userId, pasukId);
+    const current = await getOrCreatePasukProgress(userId, pasukId, hebrewYear);
     const updated = { ...current, [field]: value };
     if (!value) updated.done = false;
     if (updated.mikra1 && updated.mikra2 && updated.targum) updated.done = true;
 
     await prisma.userPasukProgress.update({
-      where: { userId_pasukId: { userId, pasukId } },
+      where: { userId_pasukId_hebrewYear: { userId, pasukId, hebrewYear } },
       data: { [field]: value, done: updated.done },
     });
   }

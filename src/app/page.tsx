@@ -52,7 +52,7 @@ export default async function HomePage({
         orderBy: { number: 'asc' },
         include: {
           userProgress: {
-            where: userId ? { userId } : { userId: '' },
+            where: userId ? { userId, hebrewYear } : { userId: '' },
           },
         },
       },

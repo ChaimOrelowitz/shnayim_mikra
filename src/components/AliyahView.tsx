@@ -25,9 +25,10 @@ interface AliyahViewProps {
   };
   pesukim: Pasuk[];
   isAdmin?: boolean;
+  hebrewYear: number;
 }
 
-export function AliyahView({ aliyah, pesukim, isAdmin: _isAdmin }: AliyahViewProps) {
+export function AliyahView({ aliyah, pesukim, isAdmin: _isAdmin, hebrewYear }: AliyahViewProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
   const [showPdf, setShowPdf] = useState(false);
@@ -47,7 +48,7 @@ export function AliyahView({ aliyah, pesukim, isAdmin: _isAdmin }: AliyahViewPro
         <div className="page-container">
           <div className="flex items-center gap-4 py-6">
             <Link
-              href={`/parsha/${aliyah.parshaId}`}
+              href={`/parsha/${aliyah.parshaId}?year=${hebrewYear}`}
               className="text-sage-600 hover:text-sage-700"
               aria-label="Back to parsha"
             >
@@ -101,7 +102,7 @@ export function AliyahView({ aliyah, pesukim, isAdmin: _isAdmin }: AliyahViewPro
                   </div>
                   <div className="divide-y divide-parchment-200">
                     {perekPesukim.map((p) => (
-                      <PasukRow key={p.id} pasuk={p} />
+                      <PasukRow key={p.id} pasuk={p} hebrewYear={hebrewYear} />
                     ))}
                   </div>
                 </div>

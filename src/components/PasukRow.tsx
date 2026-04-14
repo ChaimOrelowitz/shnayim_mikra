@@ -15,16 +15,17 @@ interface PasukRowProps {
     mikra2: boolean;
     targum: boolean;
   };
+  hebrewYear: number;
 }
 
-export function PasukRow({ pasuk }: PasukRowProps) {
+export function PasukRow({ pasuk, hebrewYear }: PasukRowProps) {
   const [isPending, startTransition] = useTransition();
   const { lang } = useLanguage();
   const isHe = lang === 'he';
 
   const handleToggle = (field: 'done' | 'mikra1' | 'mikra2' | 'targum', value: boolean) => {
     startTransition(async () => {
-      await updatePasukProgress(pasuk.id, field, value);
+      await updatePasukProgress(pasuk.id, field, value, hebrewYear);
     });
   };
 
