@@ -36,11 +36,14 @@ function normalize(s: string) {
 
 function matchParsha(name: string, parshiyos: Parsha[]): Parsha | null {
   const n = normalize(name);
+  // Exact match first
+  const exact = parshiyos.find(p => p.englishName && normalize(p.englishName) === n);
+  if (exact) return exact;
+  // Loose match: both must be at least 6 chars to avoid false positives
   return parshiyos.find(p => {
-    if (p.englishName && normalize(p.englishName) === n) return true;
-    // Try partial matches for common spelling variants
     const en = normalize(p.englishName ?? '');
-    return en && (en.startsWith(n) || n.startsWith(en));
+    if (!en || en.length < 6 || n.length < 6) return false;
+    return en === n;
   }) ?? null;
 }
 
