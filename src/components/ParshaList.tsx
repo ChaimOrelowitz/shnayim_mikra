@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/language';
 import { AliyahCard } from './AliyahCard';
 import { markParshaComplete, signOut, exitUserMode } from '@/app/actions';
+import { hebrewYearLabel } from '@/lib/hebcal';
 
 const SEFARIM: { nameHe: string; nameEn: string; min: number; max: number }[] = [
   { nameHe: 'בראשית', nameEn: 'Bereishit', min: 1,  max: 12 },
@@ -36,68 +38,94 @@ interface ParshaListProps {
   isAdmin?: boolean;
   location?: 'EY' | 'CHUL';
   isViewingAsUser?: boolean;
+  hebrewYear: number;
+  availableYears: number[];
 }
 
-export function ParshaList({ parshiyos, isAdmin, location, isViewingAsUser }: ParshaListProps) {
+export function ParshaList({
+  parshiyos,
+  isAdmin,
+  location,
+  isViewingAsUser,
+  hebrewYear,
+  availableYears,
+}: ParshaListProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [selectedSefer, setSelectedSefer] = useState<typeof SEFARIM[0] | null>(null);
+  const router = useRouter();
+
+  function changeYear(y: number) {
+    setSelectedSefer(null);
+    router.push(`/?year=${y}`);
+  }
+
+  const adminBanner = isViewingAsUser ? (
+    <div className="bg-amber-50 border-b border-amber-200 py-2">
+      <div className="page-container flex items-center justify-between">
+        <span className="text-xs text-amber-700 font-medium">Admin — viewing as user</span>
+        <form action={exitUserMode}>
+          <button type="submit" className="text-xs text-amber-700 hover:text-amber-900 font-medium">
+            ← Back to admin
+          </button>
+        </form>
+      </div>
+    </div>
+  ) : null;
 
   // ── Sefer cards view ──────────────────────────────────────────────────────
   if (!selectedSefer) {
     return (
       <div className="min-h-screen bg-parchment-50">
-        {isViewingAsUser && (
-          <div className="bg-amber-50 border-b border-amber-200 py-2">
-            <div className="page-container flex items-center justify-between">
-              <span className="text-xs text-amber-700 font-medium">Admin — viewing as user</span>
-              <form action={exitUserMode}>
-                <button type="submit" className="text-xs text-amber-700 hover:text-amber-900 font-medium">
-                  ← Back to admin
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
+        {adminBanner}
         <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="page-container">
-            <div className="flex items-center justify-between py-6">
+            <div className="flex items-center justify-between py-4">
               <div>
-                <h1 className="text-3xl font-bold text-ink-900 font-hebrew">
+                <h1 className="text-2xl font-bold text-ink-900 font-hebrew">
                   שניים מקרא ואחד תרגום
                 </h1>
-                <p className="text-ink-700 mt-1 font-hebrew">
+                <p className="text-ink-500 text-sm mt-0.5">
                   {isHe ? 'מעקב שניים מקרא ואחד תרגום' : "Shnayim Mikra v'Echad Targum Tracker"}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 {isAdmin && (
-                  <>
-                    <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Admin</span>
-                    <a href="/admin/upload" className="text-xs text-sage-600 hover:text-sage-700 font-medium transition-colors">
-                      Upload PDFs
-                    </a>
-                  </>
+                  <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Admin</span>
                 )}
                 {location && (
                   <a
                     href="/settings"
-                    className="text-xs text-ink-400 hover:text-ink-700 transition-colors"
+                    className="text-xs px-1.5 py-0.5 bg-parchment-200 rounded text-ink-500 font-medium hover:bg-parchment-300 transition-colors"
                     title="Settings"
                   >
-                    <span className="px-1.5 py-0.5 bg-parchment-200 rounded text-ink-500 font-medium">
-                      {location}
-                    </span>
+                    {location}
                   </a>
                 )}
                 <form action={signOut}>
-                  <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors font-hebrew">
+                  <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors">
                     {isHe ? 'יציאה' : 'Sign out'}
                   </button>
                 </form>
               </div>
+            </div>
+
+            {/* Year selector */}
+            <div className="pb-3 flex items-center gap-2">
+              <span className="text-xs text-ink-400">Year:</span>
+              <select
+                value={hebrewYear}
+                onChange={(e) => changeYear(parseInt(e.target.value, 10))}
+                className="text-xs border border-parchment-300 rounded px-2 py-1 bg-white text-ink-700 focus:outline-none focus:ring-1 focus:ring-ink-400"
+              >
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>
+                    {hebrewYearLabel(y)}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </header>
@@ -157,21 +185,10 @@ export function ParshaList({ parshiyos, isAdmin, location, isViewingAsUser }: Pa
 
   return (
     <div className="min-h-screen bg-parchment-50">
-      {isViewingAsUser && (
-        <div className="bg-amber-50 border-b border-amber-200 py-2">
-          <div className="page-container flex items-center justify-between">
-            <span className="text-xs text-amber-700 font-medium">Admin — viewing as user</span>
-            <form action={exitUserMode}>
-              <button type="submit" className="text-xs text-amber-700 hover:text-amber-900 font-medium">
-                ← Back to admin
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      {adminBanner}
       <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="page-container">
-          <div className="flex items-center gap-3 py-6">
+          <div className="flex items-center gap-3 py-5">
             <button
               onClick={() => setSelectedSefer(null)}
               className="text-ink-400 hover:text-ink-700 transition-colors"
@@ -183,6 +200,7 @@ export function ParshaList({ parshiyos, isAdmin, location, isViewingAsUser }: Pa
             <h1 className="text-3xl font-bold text-ink-900 font-hebrew">
               {isHe ? selectedSefer.nameHe : selectedSefer.nameEn}
             </h1>
+            <span className="ml-auto text-xs text-ink-400">{hebrewYearLabel(hebrewYear)}</span>
           </div>
         </div>
       </header>
@@ -207,7 +225,7 @@ export function ParshaList({ parshiyos, isAdmin, location, isViewingAsUser }: Pa
                           startTransition(() => markParshaComplete(parsha.id, !allDone));
                         }}
                         disabled={isPending}
-                        title={allDone ? (isHe ? 'בטל סימון' : 'Mark incomplete') : (isHe ? 'סמן הושלם' : 'Mark all done')}
+                        title={allDone ? 'Mark incomplete' : 'Mark all done'}
                         className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
                           allDone
                             ? 'bg-sage-500 text-white hover:bg-sage-600'
