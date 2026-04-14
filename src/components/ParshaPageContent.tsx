@@ -30,7 +30,7 @@ export function ParshaPageContent({ parsha, isAdmin, hebrewYear }: ParshaPageCon
 
   return (
     <div className="min-h-screen bg-parchment-50">
-      <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-14 z-10">
         <div className="page-container">
           <div className="flex items-center gap-4 py-6">
             <Link href={`/?year=${hebrewYear}`} className="text-sage-600 hover:text-sage-700" aria-label="Back to home">

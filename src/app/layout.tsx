@@ -1,15 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import { Alike, Poppins } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/lib/language';
-import { LanguageToggle } from '@/components/LanguageToggle';
-
-const alike = Alike({
-  weight: ['400'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-alike',
-});
+import { TopNav } from '@/components/TopNav';
 
 const poppins = Poppins({
   weight: ['300', '400', '500', '600', '700'],
@@ -41,10 +34,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${alike.variable} ${poppins.variable}`}>
+      <body className={poppins.variable}>
         <LanguageProvider>
+          <TopNav />
           {children}
-          <LanguageToggle />
         </LanguageProvider>
       </body>
     </html>

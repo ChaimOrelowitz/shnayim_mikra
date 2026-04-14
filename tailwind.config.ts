@@ -9,41 +9,39 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Shnayim Yomi brand palette
-        // Navy / dark backgrounds
         parchment: {
-          50:  '#f5f7fa',  // page background
-          100: '#edf1f7',
-          200: '#dce8f4',
-          300: '#c1d9f1',  // borders, dividers
-          400: '#9dbddf',
-          500: '#7aa3ca',
-          600: '#5a89b5',
+          50:  '#fdfbf7',
+          100: '#f9f5ed',
+          200: '#f3ead9',
+          300: '#e8d9bd',
+          400: '#d9c49f',
+          500: '#c9ae81',
+          600: '#b89a63',
         },
-        // Dark navy text / headings
         ink: {
-          600: '#41648d',  // medium navy-blue
-          700: '#344358',  // dark blue-grey
-          800: '#192434',  // near-dark navy
-          900: '#162435',  // darkest navy
+          400: '#888888',
+          500: '#666666',
+          600: '#555555',
+          700: '#3d3d3d',
+          800: '#2a2a2a',
+          900: '#1a1a1a',
         },
-        // Teal accent (primary interactive)
         sage: {
-          50:  '#e8f4f4',
-          100: '#d0eceb',
-          200: '#a1d5d3',
-          300: '#7fc5c4',
-          400: '#5aa6a4',  // teal — primary action
-          500: '#449cb6',  // darker teal
-          600: '#3a89a0',
-          700: '#2f7085',
-          900: '#162435',
+          50:  '#f2f7f2',
+          100: '#e8f0e8',
+          200: '#d1e1d1',
+          300: '#a8c9a8',
+          400: '#7eb17e',
+          500: '#5a9a5a',
+          600: '#4a8a4a',
+          700: '#3a7a3a',
+          900: '#1a3a1a',
         },
       },
       fontFamily: {
-        sans:    ['Poppins', 'Open Sans', 'system-ui', 'sans-serif'],
-        display: ['Alike', 'Georgia', 'serif'],
-        hebrew:  ['David Libre', 'Frank Ruehl CLM', 'serif'],
+        sans:   ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
+        serif:  ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
+        hebrew: ['David Libre', 'Frank Ruehl CLM', 'serif'],
       },
     },
   },

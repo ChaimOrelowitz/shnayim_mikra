@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shnayim Mikra — UI Concepts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; color: #111; }
+
+  .nav { background: #111; color: #fff; padding: 16px 32px; display: flex; gap: 24px; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .nav-title { font-size: 14px; font-weight: 600; color: #aaa; margin-right: 8px; }
+  .nav a { color: #ccc; text-decoration: none; font-size: 13px; padding: 6px 12px; border-radius: 6px; transition: background .15s; }
+  .nav a:hover, .nav a.active { background: #333; color: #fff; }
+
+  .section { padding: 48px 32px; max-width: 1200px; margin: 0 auto; }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+  .section-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .section-desc { font-size: 13px; color: #999; margin-bottom: 32px; }
+  .divider { border: none; border-top: 1px solid #2a2a2a; margin: 0; }
+
+  /* ── CONCEPT A: Current (reference) ── */
+  .concept-a { background: #f5f0e8; border-radius: 16px; overflow: hidden; }
+  .ca-header { background: white; border-bottom: 1px solid #e5ddd0; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .ca-title { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+  .ca-sub { font-size: 12px; color: #888; margin-top: 2px; }
+  .ca-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 24px; }
+  .ca-card { background: white; border: 1px solid #e5ddd0; border-radius: 12px; padding: 20px; cursor: pointer; }
+  .ca-card-name { font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+  .ca-card-sub { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .ca-bar-bg { background: #e5ddd0; border-radius: 99px; height: 6px; margin-bottom: 6px; }
+  .ca-bar-fill { background: #6b8f6b; border-radius: 99px; height: 6px; }
+  .ca-bar-label { font-size: 11px; color: #aaa; }
+
+  /* ── CONCEPT B: Heatmap ── */
+  .concept-b { background: #0f1117; border-radius: 16px; overflow: hidden; }
+  .cb-header { padding: 24px 28px 20px; border-bottom: 1px solid #1e2030; display: flex; justify-content: space-between; align-items: flex-start; }
+  .cb-title { font-size: 20px; font-weight: 700; color: #f0f0f0; }
+  .cb-year { font-size: 12px; color: #555; margin-top: 4px; }
+  .cb-stats { display: flex; gap: 20px; }
+  .cb-stat { text-align: right; }
+  .cb-stat-val { font-size: 22px; font-weight: 700; color: #7fb37f; }
+  .cb-stat-label { font-size: 11px; color: #555; }
+  .cb-body { padding: 24px 28px; }
+  .cb-sefer { margin-bottom: 28px; }
+  .cb-sefer-name { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #555; margin-bottom: 10px; }
+  .cb-row { display: flex; gap: 5px; flex-wrap: wrap; }
+  .cb-cell { width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: rgba(255,255,255,.5); font-weight: 600; cursor: pointer; transition: transform .1s; position: relative; }
+  .cb-cell:hover { transform: scale(1.15); }
+  .cb-cell-empty { background: #1a1d2e; }
+  .cb-cell-partial { background: #2d5a2d; color: #7fb37f; }
+  .cb-cell-partial2 { background: #3d7a3d; color: #9fd09f; }
+  .cb-cell-done { background: #5a9e5a; color: #fff; }
+  .cb-cell-current { outline: 2px solid #7fb37f; outline-offset: 2px; }
+  .cb-legend { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+  .cb-legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #555; }
+  .cb-legend-sq { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── CONCEPT C: Minimal cards with inline aliyos ── */
+  .concept-c { background: #fafaf8; border-radius: 16px; overflow: hidden; }
+  .cc-header { background: white; border-bottom: 1px solid #ebebeb; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .cc-logo { font-size: 18px; font-weight: 800; color: #111; letter-spacing: -.02em; }
+  .cc-actions { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #999; }
+  .cc-year-pill { background: #f0f0f0; border-radius: 99px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #555; }
+  .cc-body { padding: 20px 24px; }
+  .cc-week { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+  .cc-week-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #6b7fc4; margin-bottom: 8px; }
+  .cc-week-name { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 16px; }
+  .cc-aliyos-row { display: flex; gap: 8px; }
+  .cc-aliyah { flex: 1; background: rgba(255,255,255,.08); border-radius: 8px; padding: 10px 6px; text-align: center; cursor: pointer; transition: background .15s; }
+  .cc-aliyah:hover { background: rgba(255,255,255,.15); }
+  .cc-aliyah-num { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.5); margin-bottom: 8px; }
+  .cc-aliyah-dots { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .cc-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .cc-dot-done { background: #7fb37f; }
+  .cc-dot-partial { background: #c8a84b; }
+  .cc-dot-empty { background: rgba(255,255,255,.2); }
+  .cc-aliyah-done { background: rgba(127,179,127,.2); }
+  .cc-sefer-list { display: flex; flex-direction: column; gap: 2px; }
+  .cc-parsha-row { background: white; border: 1px solid #ebebeb; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color .15s; }
+  .cc-parsha-row:hover { border-color: #ccc; }
+  .cc-parsha-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .cc-parsha-check-done { border-color: #7fb37f; background: #7fb37f; }
+  .cc-parsha-name { font-size: 15px; font-weight: 600; color: #111; flex: 1; }
+  .cc-aliyah-mini { display: flex; gap: 4px; }
+  .cc-mini-dot { width: 8px; height: 8px; border-radius: 2px; }
+  .cc-mini-done { background: #7fb37f; }
+  .cc-mini-partial { background: #e8c96b; }
+  .cc-mini-empty { background: #e8e8e8; }
+  .cc-sefer-header { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #bbb; padding: 16px 4px 8px; }
+
+  /* ── CONCEPT D: Rich cards with rings ── */
+  .concept-d { background: #f7f3ee; border-radius: 16px; overflow: hidden; }
+  .cd-header { background: #1c1c1e; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .cd-title { font-size: 19px; font-weight: 700; color: #fff; }
+  .cd-sub { font-size: 11px; color: #888; margin-top: 2px; }
+  .cd-year { font-size: 12px; color: #888; border: 1px solid #333; padding: 4px 10px; border-radius: 99px; }
+  .cd-body { padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .cd-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .cd-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .cd-name { font-size: 20px; font-weight: 800; color: #1c1c1e; }
+  .cd-sub2 { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .cd-ring-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+  .cd-ring-wrap svg { transform: rotate(-90deg); }
+  .cd-ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #1c1c1e; }
+  .cd-parsha-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cd-pgrid-label { font-size: 9px; color: #ccc; text-align: center; margin-bottom: 4px; }
+  .cd-pgrid-row { display: contents; }
+  .cd-pgrid-cell { height: 6px; border-radius: 2px; }
+  .cd-pgrid-done { background: #6b9e6b; }
+  .cd-pgrid-partial { background: #c8a84b; }
+  .cd-pgrid-empty { background: #ebebeb; }
+  .cd-this-week { font-size: 10px; font-weight: 600; color: #6b9e6b; margin-top: 12px; display: flex; align-items: center; gap: 4px; }
+  .cd-badge { background: #edf5ed; color: #4a8a4a; font-size: 10px; font-weight: 600; border-radius: 99px; padding: 2px 8px; display: inline-block; }
+
+  /* ── CONCEPT E: Full-width timeline ── */
+  .concept-e { background: #fff; border-radius: 16px; overflow: hidden; }
+  .ce-header { background: #111827; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .ce-title { font-size: 17px; font-weight: 700; color: #fff; }
+  .ce-progress { display: flex; align-items: center; gap: 10px; }
+  .ce-pct { font-size: 28px; font-weight: 800; color: #fff; }
+  .ce-pct-label { font-size: 11px; color: #6b7280; }
+  .ce-subbar-bg { width: 120px; height: 4px; background: #374151; border-radius: 99px; }
+  .ce-subbar-fill { height: 4px; background: #6b9e6b; border-radius: 99px; }
+  .ce-body { }
+  .ce-sefer { border-bottom: 1px solid #f3f4f6; }
+  .ce-sefer-header { padding: 14px 24px; display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f9fafb; }
+  .ce-sefer-name { font-size: 14px; font-weight: 700; color: #111827; flex: 1; }
+  .ce-sefer-count { font-size: 12px; color: #9ca3af; }
+  .ce-sefer-bar-bg { flex: 1; height: 4px; background: #e5e7eb; border-radius: 99px; max-width: 80px; }
+  .ce-sefer-bar-fill { height: 4px; background: #6b9e6b; border-radius: 99px; }
+  .ce-parsha { padding: 12px 24px 12px 44px; display: flex; align-items: center; gap: 12px; border-top: 1px solid #f3f4f6; }
+  .ce-parsha:hover { background: #fafafa; }
+  .ce-parsha-name { font-size: 13px; font-weight: 600; color: #374151; flex: 1; }
+  .ce-parsha-current { color: #1d4ed8; }
+  .ce-aliyah-badges { display: flex; gap: 3px; }
+  .ce-badge { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+  .ce-badge-done { background: #d1fae5; color: #065f46; }
+  .ce-badge-partial { background: #fef3c7; color: #92400e; }
+  .ce-badge-empty { background: #f3f4f6; color: #9ca3af; }
+  .ce-this { font-size: 9px; font-weight: 700; background: #dbeafe; color: #1e40af; border-radius: 99px; padding: 2px 6px; }
+
+  .concept-label { color: #fff; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">Shnayim Mikra — UI Concepts</span>
+  <a href="#current" class="active">A · Current</a>
+  <a href="#heatmap">B · Heatmap</a>
+  <a href="#inline">C · Inline aliyos</a>
+  <a href="#rings">D · Rings</a>
+  <a href="#timeline">E · Timeline</a>
+</div>
+
+<!-- ═══ A: CURRENT ═══ -->
+<div class="section" id="current">
+  <div class="section-label">Concept A</div>
+  <div class="section-title concept-label">Current design (reference)</div>
+  <div class="section-desc">Sefer cards with thin progress bar. Parchment palette.</div>
+  <div class="concept-a">
+    <div class="ca-header">
+      <div>
+        <div class="ca-title" style="font-size:20px;">שניים מקרא ואחד תרגום</div>
+        <div class="ca-sub">Shnayim Mikra v'Echad Targum Tracker</div>
+      </div>
+      <div style="font-size:12px;color:#aaa;">5786 (2025–26) ▾</div>
+    </div>
+    <div class="ca-grid">
+      <div class="ca-card">
+        <div class="ca-card-name">Bereishit</div>
+        <div class="ca-card-sub">בראשית · 12 parshiyos</div>
+        <div class="ca-bar-bg"><div class="ca-bar-fill" style="width:75%"></div></div>
+        <div class="ca-bar-label">9/12 complete</div>
+      </div>
+      <div class="ca-card" style="border-color:#8aaa8a;outline:2px solid #8aaa8a;">
+        <div class="ca-card-name" style="display:flex;align-items:center;gap:8px;">Vayikra <span style="font-size:10px;background:#edf5ed;color:#4a8a4a;border-radius:99px;padding:2px 8px;font-weight:600;">This week</span></div>
+        <div class="ca-card-sub">ויקרא · 10 parshiyos</div>
+        <div class="ca-bar-bg"><div class="ca-bar-fill" style="width:30%"></div></div>
+        <div class="ca-bar-label">3/10 complete</div>
+      </div>
+      <div class="ca-card">
+        <div class="ca-card-name">Shemot</div>
+        <div class="ca-card-sub">שמות · 11 parshiyos</div>
+        <div class="ca-bar-bg"><div class="ca-bar-fill" style="width:100%"></div></div>
+        <div class="ca-bar-label">11/11 complete</div>
+      </div>
+    </div>
+  </div>
+</div>
+<hr class="divider" />
+
+<!-- ═══ B: HEATMAP ═══ -->
+<div class="section" id="heatmap">
+  <div class="section-label">Concept B</div>
+  <div class="section-title concept-label">Heatmap grid — dark theme</div>
+  <div class="section-desc">Every parsha is a cell. Color = completion level. See the entire year at once — satisfying to watch fill in.</div>
+  <div class="concept-b">
+    <div class="cb-header">
+      <div>
+        <div class="cb-title">שניים מקרא</div>
+        <div class="cb-year">5786 · Chutz LaAretz</div>
+      </div>
+      <div class="cb-stats">
+        <div class="cb-stat">
+          <div class="cb-stat-val">23</div>
+          <div class="cb-stat-label">aliyos done</div>
+        </div>
+        <div class="cb-stat">
+          <div class="cb-stat-val">34%</div>
+          <div class="cb-stat-label">of year</div>
+        </div>
+      </div>
+    </div>
+    <div class="cb-body">
+      <div class="cb-sefer">
+        <div class="cb-sefer-name">Bereishit</div>
+        <div class="cb-row">
+          <div class="cb-cell cb-cell-done" title="Bereishit">בר׳</div>
+          <div class="cb-cell cb-cell-done" title="Noach">נח</div>
+          <div class="cb-cell cb-cell-done" title="Lech Lecha">לך</div>
+          <div class="cb-cell cb-cell-done" title="Vayera">וירא</div>
+          <div class="cb-cell cb-cell-partial2" title="Chayei Sarah">חיי</div>
+          <div class="cb-cell cb-cell-partial" title="Toldot">תול׳</div>
+          <div class="cb-cell cb-cell-empty" title="Vayetzei">ויצ׳</div>
+          <div class="cb-cell cb-cell-empty" title="Vayishlach">וישל׳</div>
+          <div class="cb-cell cb-cell-empty" title="Vayeshev">וישב</div>
+          <div class="cb-cell cb-cell-empty" title="Miketz">מקץ</div>
+          <div class="cb-cell cb-cell-empty" title="Vayigash">ויג׳</div>
+          <div class="cb-cell cb-cell-empty" title="Vayechi">ויחי</div>
+        </div>
+      </div>
+      <div class="cb-sefer">
+        <div class="cb-sefer-name">Shemot</div>
+        <div class="cb-row">
+          <div class="cb-cell cb-cell-empty">שמ׳</div>
+          <div class="cb-cell cb-cell-empty">וארא</div>
+          <div class="cb-cell cb-cell-empty">בא</div>
+          <div class="cb-cell cb-cell-empty">בשל׳</div>
+          <div class="cb-cell cb-cell-empty">יתר׳</div>
+          <div class="cb-cell cb-cell-empty">משפ׳</div>
+          <div class="cb-cell cb-cell-empty">תרו׳</div>
+          <div class="cb-cell cb-cell-empty">תצ׳</div>
+          <div class="cb-cell cb-cell-empty">כי ת׳</div>
+          <div class="cb-cell cb-cell-empty">ויק׳</div>
+          <div class="cb-cell cb-cell-empty">פק׳</div>
+        </div>
+      </div>
+      <div class="cb-sefer">
+        <div class="cb-sefer-name">Vayikra</div>
+        <div class="cb-row">
+          <div class="cb-cell cb-cell-empty">ויק׳</div>
+          <div class="cb-cell cb-cell-empty">צו</div>
+          <div class="cb-cell cb-cell-empty">שמי׳</div>
+          <div class="cb-cell cb-cell-current cb-cell-partial" title="This week: Tazria-Metzora">תז׳מצ׳</div>
+          <div class="cb-cell cb-cell-empty">אח׳ק׳</div>
+          <div class="cb-cell cb-cell-empty">אמר</div>
+          <div class="cb-cell cb-cell-empty">בהר׳</div>
+        </div>
+      </div>
+      <div class="cb-legend">
+        <div class="cb-legend-item"><div class="cb-legend-sq" style="background:#1a1d2e"></div> Not started</div>
+        <div class="cb-legend-item"><div class="cb-legend-sq" style="background:#2d5a2d"></div> 1 of 3</div>
+        <div class="cb-legend-item"><div class="cb-legend-sq" style="background:#3d7a3d"></div> 2 of 3</div>
+        <div class="cb-legend-item"><div class="cb-legend-sq" style="background:#5a9e5a"></div> Complete</div>
+        <div class="cb-legend-item"><div class="cb-legend-sq" style="background:transparent;outline:2px solid #7fb37f;outline-offset:1px"></div> This week</div>
+      </div>
+    </div>
+  </div>
+</div>
+<hr class="divider" />
+
+<!-- ═══ C: INLINE ALIYOS ═══ -->
+<div class="section" id="inline">
+  <div class="section-label">Concept C</div>
+  <div class="section-title concept-label">Inline aliyos — "this week" hero card</div>
+  <div class="section-desc">Current parsha always visible at top. Parsha rows show 7 aliyah squares inline — tap without drilling in.</div>
+  <div class="concept-c">
+    <div class="cc-header">
+      <div class="cc-logo">שניים מקרא</div>
+      <div class="cc-actions">
+        <div class="cc-year-pill">5786 ▾</div>
+        <span>EY</span>
+        <span>Sign out</span>
+      </div>
+    </div>
+    <div class="cc-body">
+      <!-- This week hero -->
+      <div class="cc-week">
+        <div class="cc-week-label">This week</div>
+        <div class="cc-week-name">תזריע-מצורע</div>
+        <div class="cc-aliyos-row">
+          <div class="cc-aliyah cc-aliyah-done">
+            <div class="cc-aliyah-num">א</div>
+            <div class="cc-aliyah-dots">
+              <div class="cc-dot cc-dot-done"></div>
+              <div class="cc-dot cc-dot-done"></div>
+              <div class="cc-dot cc-dot-done"></div>
+            </div>
+          </div>
+          <div class="cc-aliyah">
+            <div class="cc-aliyah-num">ב</div>
+            <div class="cc-aliyah-dots">
+              <div class="cc-dot cc-dot-done"></div>
+              <div class="cc-dot cc-dot-partial"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+            </div>
+          </div>
+          <div class="cc-aliyah">
+            <div class="cc-aliyah-num">ג</div>
+            <div class="cc-aliyah-dots">
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+            </div>
+          </div>
+          <div class="cc-aliyah">
+            <div class="cc-aliyah-num">ד</div>
+            <div class="cc-aliyah-dots">
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+            </div>
+          </div>
+          <div class="cc-aliyah">
+            <div class="cc-aliyah-num">ה</div>
+            <div class="cc-aliyah-dots">
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+            </div>
+          </div>
+          <div class="cc-aliyah">
+            <div class="cc-aliyah-num">ו</div>
+            <div class="cc-aliyah-dots">
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+            </div>
+          </div>
+          <div class="cc-aliyah">
+            <div class="cc-aliyah-num">ז</div>
+            <div class="cc-aliyah-dots">
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+              <div class="cc-dot cc-dot-empty"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parsha list with inline aliyah squares -->
+      <div class="cc-sefer-header">Vayikra</div>
+      <div class="cc-sefer-list">
+        <div class="cc-parsha-row">
+          <div class="cc-parsha-check cc-parsha-check-done">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="cc-parsha-name">Vayikra</div>
+          <div class="cc-aliyah-mini">
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+          </div>
+        </div>
+        <div class="cc-parsha-row">
+          <div class="cc-parsha-check cc-parsha-check-done">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="cc-parsha-name">Tzav</div>
+          <div class="cc-aliyah-mini">
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+          </div>
+        </div>
+        <div class="cc-parsha-row">
+          <div class="cc-parsha-check cc-parsha-check-done">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="cc-parsha-name">Shemini</div>
+          <div class="cc-aliyah-mini">
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-done"></div>
+          </div>
+        </div>
+        <div class="cc-parsha-row" style="border-color:#6b9e6b;outline:1.5px solid #6b9e6b;">
+          <div class="cc-parsha-check" style="border-color:#ddd;"></div>
+          <div class="cc-parsha-name" style="color:#1a1a1a;">Tazria-Metzora <span style="font-size:10px;background:#edf5ed;color:#3a7a3a;border-radius:99px;padding:2px 7px;font-weight:600;margin-left:4px;">This week</span></div>
+          <div class="cc-aliyah-mini">
+            <div class="cc-mini-dot cc-mini-done"></div>
+            <div class="cc-mini-dot cc-mini-partial"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+          </div>
+        </div>
+        <div class="cc-parsha-row">
+          <div class="cc-parsha-check"></div>
+          <div class="cc-parsha-name" style="color:#aaa;">Acharei Mot-Kedoshim</div>
+          <div class="cc-aliyah-mini">
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+            <div class="cc-mini-dot cc-mini-empty"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<hr class="divider" />
+
+<!-- ═══ D: RINGS ═══ -->
+<div class="section" id="rings">
+  <div class="section-label">Concept D</div>
+  <div class="section-title concept-label">Progress rings per sefer</div>
+  <div class="section-desc">Each sefer card shows a ring (% complete) + mini aliyah grid for every parsha. More data density, still clean.</div>
+  <div class="concept-d">
+    <div class="cd-header">
+      <div>
+        <div class="cd-title">שניים מקרא</div>
+        <div class="cd-sub">Shnayim Mikra Tracker</div>
+      </div>
+      <select style="background:#2a2a2c;color:#888;border:1px solid #3a3a3c;border-radius:8px;padding:6px 10px;font-size:12px;">
+        <option>5785 (2024–25)</option>
+        <option selected>5786 (2025–26)</option>
+        <option>5787 (2026–27)</option>
+      </select>
+    </div>
+    <div class="cd-body">
+      <!-- Bereishit card -->
+      <div class="cd-card">
+        <div class="cd-card-top">
+          <div>
+            <div class="cd-name">Bereishit</div>
+            <div class="cd-sub2">בראשית · 12 parshiyos</div>
+          </div>
+          <div class="cd-ring-wrap">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="21" fill="none" stroke="#f0ebe0" stroke-width="5"/>
+              <circle cx="26" cy="26" r="21" fill="none" stroke="#6b9e6b" stroke-width="5"
+                stroke-dasharray="131.9" stroke-dashoffset="33" stroke-linecap="round"/>
+            </svg>
+            <div class="cd-ring-center">75%</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#bbb;margin-bottom:6px;font-weight:600;letter-spacing:.05em;">ALIYOS · each row = 1 parsha</div>
+        <div class="cd-parsha-grid">
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-partial"></div><div class="cd-pgrid-cell cd-pgrid-partial"></div><div class="cd-pgrid-cell cd-pgrid-partial"></div><div class="cd-pgrid-cell cd-pgrid-partial"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div>
+          <div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div>
+        </div>
+      </div>
+      <!-- Vayikra card (current) -->
+      <div class="cd-card" style="outline:2px solid #6b9e6b;">
+        <div class="cd-card-top">
+          <div>
+            <div class="cd-name">Vayikra</div>
+            <div class="cd-sub2">ויקרא · 10 parshiyos</div>
+          </div>
+          <div class="cd-ring-wrap">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="21" fill="none" stroke="#f0ebe0" stroke-width="5"/>
+              <circle cx="26" cy="26" r="21" fill="none" stroke="#6b9e6b" stroke-width="5"
+                stroke-dasharray="131.9" stroke-dashoffset="92" stroke-linecap="round"/>
+            </svg>
+            <div class="cd-ring-center">30%</div>
+          </div>
+        </div>
+        <div class="cd-this-week"><span>●</span> This week: Tazria-Metzora</div>
+        <div style="margin-top:10px;font-size:10px;color:#bbb;margin-bottom:6px;font-weight:600;letter-spacing:.05em;">ALIYOS · each row = 1 parsha</div>
+        <div class="cd-parsha-grid">
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-partial" style="outline:1px solid #6b9e6b;"></div><div class="cd-pgrid-cell cd-pgrid-partial" style="outline:1px solid #6b9e6b;"></div><div class="cd-pgrid-cell cd-pgrid-empty" style="outline:1px solid #6b9e6b;"></div><div class="cd-pgrid-cell cd-pgrid-empty" style="outline:1px solid #6b9e6b;"></div><div class="cd-pgrid-cell cd-pgrid-empty" style="outline:1px solid #6b9e6b;"></div><div class="cd-pgrid-cell cd-pgrid-empty" style="outline:1px solid #6b9e6b;"></div><div class="cd-pgrid-cell cd-pgrid-empty" style="outline:1px solid #6b9e6b;"></div>
+          <div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div><div class="cd-pgrid-cell cd-pgrid-empty"></div>
+        </div>
+      </div>
+      <!-- Shemot card -->
+      <div class="cd-card">
+        <div class="cd-card-top">
+          <div>
+            <div class="cd-name">Shemot</div>
+            <div class="cd-sub2">שמות · 11 parshiyos</div>
+          </div>
+          <div class="cd-ring-wrap">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="21" fill="none" stroke="#f0ebe0" stroke-width="5"/>
+              <circle cx="26" cy="26" r="21" fill="none" stroke="#6b9e6b" stroke-width="5"
+                stroke-dasharray="131.9" stroke-dashoffset="0" stroke-linecap="round"/>
+            </svg>
+            <div class="cd-ring-center">100%</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#bbb;margin-bottom:6px;margin-top:22px;font-weight:600;letter-spacing:.05em;">ALIYOS · each row = 1 parsha</div>
+        <div class="cd-parsha-grid">
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+          <div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div><div class="cd-pgrid-cell cd-pgrid-done"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<hr class="divider" />
+
+<!-- ═══ E: TIMELINE ═══ -->
+<div class="section" id="timeline">
+  <div class="section-label">Concept E</div>
+  <div class="section-title concept-label">Flat timeline — everything on one page</div>
+  <div class="section-desc">No drilling — all sefarim expanded inline, collapsible. Per-aliyah badges visible immediately. Fast to log.</div>
+  <div class="concept-e">
+    <div class="ce-header">
+      <div>
+        <div class="ce-title">שניים מקרא ואחד תרגום</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px;">5786 · Chaim · EY</div>
+      </div>
+      <div class="ce-progress">
+        <div>
+          <div class="ce-pct">34%</div>
+          <div class="ce-pct-label">of year done</div>
+        </div>
+        <div>
+          <div class="ce-subbar-bg"><div class="ce-subbar-fill" style="width:34%"></div></div>
+          <div style="font-size:10px;color:#6b7280;margin-top:4px;">23 / 68 aliyos</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bereishit section -->
+    <div class="ce-sefer">
+      <div class="ce-sefer-header">
+        <span style="color:#374151;font-size:11px;">▼</span>
+        <span class="ce-sefer-name">Bereishit · בראשית</span>
+        <div class="ce-sefer-bar-bg"><div class="ce-sefer-bar-fill" style="width:75%"></div></div>
+        <span class="ce-sefer-count">9/12</span>
+      </div>
+      <div class="ce-parsha">
+        <div class="ce-parsha-name">Bereishit</div>
+        <div class="ce-aliyah-badges">
+          <div class="ce-badge ce-badge-done">1</div><div class="ce-badge ce-badge-done">2</div><div class="ce-badge ce-badge-done">3</div><div class="ce-badge ce-badge-done">4</div><div class="ce-badge ce-badge-done">5</div><div class="ce-badge ce-badge-done">6</div><div class="ce-badge ce-badge-done">7</div>
+        </div>
+      </div>
+      <div class="ce-parsha">
+        <div class="ce-parsha-name">Noach</div>
+        <div class="ce-aliyah-badges">
+          <div class="ce-badge ce-badge-done">1</div><div class="ce-badge ce-badge-done">2</div><div class="ce-badge ce-badge-done">3</div><div class="ce-badge ce-badge-done">4</div><div class="ce-badge ce-badge-done">5</div><div class="ce-badge ce-badge-done">6</div><div class="ce-badge ce-badge-done">7</div>
+        </div>
+      </div>
+      <div class="ce-parsha">
+        <div class="ce-parsha-name" style="color:#9ca3af;">Vayeshev</div>
+        <div class="ce-aliyah-badges">
+          <div class="ce-badge ce-badge-empty">1</div><div class="ce-badge ce-badge-empty">2</div><div class="ce-badge ce-badge-empty">3</div><div class="ce-badge ce-badge-empty">4</div><div class="ce-badge ce-badge-empty">5</div><div class="ce-badge ce-badge-empty">6</div><div class="ce-badge ce-badge-empty">7</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vayikra section -->
+    <div class="ce-sefer">
+      <div class="ce-sefer-header">
+        <span style="color:#374151;font-size:11px;">▼</span>
+        <span class="ce-sefer-name">Vayikra · ויקרא</span>
+        <div class="ce-sefer-bar-bg"><div class="ce-sefer-bar-fill" style="width:30%"></div></div>
+        <span class="ce-sefer-count">3/10</span>
+      </div>
+      <div class="ce-parsha">
+        <div class="ce-parsha-name">Vayikra</div>
+        <div class="ce-aliyah-badges">
+          <div class="ce-badge ce-badge-done">1</div><div class="ce-badge ce-badge-done">2</div><div class="ce-badge ce-badge-done">3</div><div class="ce-badge ce-badge-done">4</div><div class="ce-badge ce-badge-done">5</div><div class="ce-badge ce-badge-done">6</div><div class="ce-badge ce-badge-done">7</div>
+        </div>
+      </div>
+      <div class="ce-parsha" style="background:#f0fdf4;">
+        <div class="ce-parsha-name ce-parsha-current">Tazria-Metzora <span class="ce-this">This week</span></div>
+        <div class="ce-aliyah-badges">
+          <div class="ce-badge ce-badge-done">1</div><div class="ce-badge ce-badge-partial">2</div><div class="ce-badge ce-badge-empty">3</div><div class="ce-badge ce-badge-empty">4</div><div class="ce-badge ce-badge-empty">5</div><div class="ce-badge ce-badge-empty">6</div><div class="ce-badge ce-badge-empty">7</div>
+        </div>
+      </div>
+      <div class="ce-parsha">
+        <div class="ce-parsha-name" style="color:#9ca3af;">Acharei Mot-Kedoshim</div>
+        <div class="ce-aliyah-badges">
+          <div class="ce-badge ce-badge-empty">1</div><div class="ce-badge ce-badge-empty">2</div><div class="ce-badge ce-badge-empty">3</div><div class="ce-badge ce-badge-empty">4</div><div class="ce-badge ce-badge-empty">5</div><div class="ce-badge ce-badge-empty">6</div><div class="ce-badge ce-badge-empty">7</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="height:60px;"></div>
+</div>
+
+</body>
+</html>

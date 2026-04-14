@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/language';
 import { AliyahCard } from './AliyahCard';
-import { markParshaComplete, signOut, exitUserMode } from '@/app/actions';
+import { markParshaComplete, exitUserMode } from '@/app/actions';
 import { hebrewYearLabel } from '@/lib/hebcal';
 
 const SEFARIM: { nameHe: string; nameEn: string; min: number; max: number }[] = [
@@ -80,7 +80,7 @@ export function ParshaList({
     return (
       <div className="min-h-screen bg-parchment-50">
         {adminBanner}
-        <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-14 z-10">
           <div className="page-container">
             <div className="flex items-center justify-between py-4">
               <div>
@@ -91,24 +91,15 @@ export function ParshaList({
                   {isHe ? 'מעקב שניים מקרא ואחד תרגום' : "Shnayim Mikra v'Echad Targum Tracker"}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {isAdmin && (
                   <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Admin</span>
                 )}
                 {location && (
-                  <a
-                    href="/settings"
-                    className="text-xs px-1.5 py-0.5 bg-parchment-200 rounded text-ink-500 font-medium hover:bg-parchment-300 transition-colors"
-                    title="Settings"
-                  >
+                  <span className="text-xs px-1.5 py-0.5 bg-parchment-100 rounded text-ink-500 font-medium">
                     {location}
-                  </a>
+                  </span>
                 )}
-                <form action={signOut}>
-                  <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors">
-                    {isHe ? 'יציאה' : 'Sign out'}
-                  </button>
-                </form>
               </div>
             </div>
 
@@ -186,7 +177,7 @@ export function ParshaList({
   return (
     <div className="min-h-screen bg-parchment-50">
       {adminBanner}
-      <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-14 z-10">
         <div className="page-container">
           <div className="flex items-center gap-3 py-5">
             <button
