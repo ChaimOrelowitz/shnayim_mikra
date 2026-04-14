@@ -86,7 +86,7 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
   async function handleUpload() {
     const toUpload = parsed.filter(p => p.status === 'matched' && p.matchedAliyah);
     setUploading(true);
-    const newResults: Record<string, 'ok' | 'error'> = {};
+    const newResults: Record<string, string> = {};
 
     for (const item of toUpload) {
       try {
