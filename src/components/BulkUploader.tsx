@@ -151,7 +151,7 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
                   <button
                     onClick={handleUpload}
                     disabled={uploading}
-                    className="bg-sage-600 text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-sage-700 disabled:opacity-50 transition-colors"
+                    className="bg-stone-800 text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-stone-700 disabled:opacity-50 transition-colors"
                   >
                     {uploading ? 'Uploading...' : `Upload ${matched.length} file${matched.length !== 1 ? 's' : ''}`}
                   </button>
