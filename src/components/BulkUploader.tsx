@@ -26,13 +26,6 @@ interface ParsedFile {
   status: 'matched' | 'no-parsha' | 'no-aliyah' | 'bad-filename';
 }
 
-const SEFARIM = [
-  { name: 'Bereishit', min: 1,  max: 12.9 },
-  { name: 'Shemot',   min: 13, max: 23.9 },
-  { name: 'Vayikra',  min: 24, max: 33.9 },
-  { name: 'Bamidbar', min: 34, max: 43.9 },
-  { name: 'Devarim',  min: 44, max: 54.9 },
-];
 
 function normalize(s: string) {
   return s.toLowerCase()
@@ -112,12 +105,6 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
   const matched = parsed.filter(p => p.status === 'matched');
   const unmatched = parsed.filter(p => p.status !== 'matched');
 
-  // Group parshiyos by sefer for the reference list
-  const bySeferList = SEFARIM.map(sefer => ({
-    ...sefer,
-    parshiyos: parshiyos.filter(p => p.order >= sefer.min && p.order <= sefer.max),
-  }));
-
   return (
     <div className="min-h-screen bg-parchment-50">
       <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
@@ -130,9 +117,8 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
         </div>
       </header>
 
-      <main className="page-container py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: upload + results */}
-        <div className="lg:col-span-2 space-y-6">
+      <main className="page-container py-8">
+        <div className="space-y-6">
           {/* Drop zone */}
           <div
             className="border-2 border-dashed border-parchment-300 rounded-xl p-12 text-center hover:border-sage-400 transition-colors cursor-pointer bg-white"
@@ -224,26 +210,6 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
               )}
             </>
           )}
-        </div>
-
-        {/* Right: parsha name reference */}
-        <div className="space-y-4">
-          <h2 className="font-semibold text-ink-700 text-sm uppercase tracking-wide">Parsha Names</h2>
-          {bySeferList.map(sefer => (
-            <div key={sefer.name} className="card overflow-hidden">
-              <div className="bg-parchment-100 border-b border-parchment-200 px-3 py-2">
-                <h3 className="font-semibold text-ink-700 text-sm">{sefer.name}</h3>
-              </div>
-              <div className="divide-y divide-parchment-100">
-                {sefer.parshiyos.map(p => (
-                  <div key={p.id} className={`px-3 py-1.5 flex items-center justify-between ${!Number.isInteger(p.order) ? 'bg-amber-50' : ''}`}>
-                    <span className="text-sm text-ink-700">{p.englishName}</span>
-                    <span className="text-xs font-hebrew text-ink-400">{p.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
       </main>
     </div>
