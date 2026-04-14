@@ -15,10 +15,18 @@ enum Role {
   ADMIN
 }
 
+enum Location {
+  CHUL
+  EY
+}
+
 model Profile {
   id        String   @id // matches Supabase auth.users UUID
   email     String   @unique
+  firstName String?
+  lastName  String?
   role      Role     @default(USER)
+  location  Location @default(CHUL)
   createdAt DateTime @default(now())
 
   aliyahProgress UserAliyahProgress[]

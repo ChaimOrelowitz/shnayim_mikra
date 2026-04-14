@@ -45,11 +45,31 @@ export async function deleteUser(userId: string) {
 // Called after Supabase signup confirmation to create the profile row
 export async function ensureProfile() {
   const user = await getRequiredUser();
+  const meta = user.user_metadata ?? {};
   await prisma.profile.upsert({
     where: { id: user.id },
     update: {},
-    create: { id: user.id, email: user.email! },
+    create: {
+      id: user.id,
+      email: user.email!,
+      firstName: meta.firstName ?? null,
+      lastName: meta.lastName ?? null,
+    },
   });
+}
+
+export async function updateProfile(data: {
+  firstName?: string;
+  lastName?: string;
+  location?: 'EY' | 'CHUL';
+}) {
+  const user = await getRequiredUser();
+  await prisma.profile.update({
+    where: { id: user.id },
+    data,
+  });
+  revalidatePath('/');
+  revalidatePath('/settings');
 }
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────

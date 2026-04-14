@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,13 @@ export default function LoginPage() {
         router.refresh();
       }
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { firstName, lastName },
+        },
+      });
       if (error) {
         setError(error.message);
       } else {
@@ -60,6 +68,32 @@ export default function LoginPage() {
         <p className="text-stone-400 text-sm text-center mb-8">Shnayim Mikra Tracker</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === 'signup' && (
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">First name</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  required
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                  placeholder="Yosef"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-stone-700 mb-1">Last name</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  required
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                  placeholder="Cohen"
+                />
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">Email</label>
             <input

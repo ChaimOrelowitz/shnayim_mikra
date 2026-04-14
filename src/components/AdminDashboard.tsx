@@ -58,11 +58,16 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
             <h1 className="text-2xl font-bold text-ink-900">Admin</h1>
             <p className="text-sm text-ink-400">{currentUser.email}</p>
           </div>
-          <form action={signOut}>
-            <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors">
-              Sign out
-            </button>
-          </form>
+          <div className="flex items-center gap-3">
+            <a href="/settings" className="text-xs text-ink-400 hover:text-ink-700 transition-colors">
+              Settings
+            </a>
+            <form action={signOut}>
+              <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors">
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Tabs */}

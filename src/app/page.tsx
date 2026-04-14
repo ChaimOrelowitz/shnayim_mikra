@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { ParshaList } from '@/components/ParshaList';
+import { getCurrentParsha } from '@/lib/hebcal';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,12 @@ export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
+
+  const profile = userId
+    ? await prisma.profile.findUnique({ where: { id: userId } })
+    : null;
+
+  const location = profile?.location ?? 'CHUL';
 
   const parshiyos = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },
@@ -23,12 +30,13 @@ export default async function HomePage() {
     },
   });
 
-  const profile = userId
-    ? await prisma.profile.findUnique({ where: { id: userId } })
-    : null;
+  const currentParshaNames = await getCurrentParsha(location);
 
   const parshiyosWithProgress = parshiyos.map(p => ({
     ...p,
+    isCurrent: currentParshaNames.some(
+      n => n.toLowerCase() === (p.englishName ?? '').toLowerCase()
+    ),
     aliyos: p.aliyos.map(a => ({
       ...a,
       done: a.userProgress[0]?.done ?? false,
@@ -42,6 +50,7 @@ export default async function HomePage() {
     <ParshaList
       parshiyos={parshiyosWithProgress}
       isAdmin={profile?.role === 'ADMIN'}
+      location={location}
     />
   );
 }

@@ -27,15 +27,17 @@ interface Parsha {
   id: string;
   name: string;
   order: number;
+  isCurrent?: boolean;
   aliyos: Aliyah[];
 }
 
 interface ParshaListProps {
   parshiyos: Parsha[];
   isAdmin?: boolean;
+  location?: 'EY' | 'CHUL';
 }
 
-export function ParshaList({ parshiyos, isAdmin }: ParshaListProps) {
+export function ParshaList({ parshiyos, isAdmin, location }: ParshaListProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -66,6 +68,17 @@ export function ParshaList({ parshiyos, isAdmin }: ParshaListProps) {
                     </a>
                   </>
                 )}
+                {location && (
+                  <a
+                    href="/settings"
+                    className="text-xs text-ink-400 hover:text-ink-700 transition-colors"
+                    title="Settings"
+                  >
+                    <span className="px-1.5 py-0.5 bg-parchment-200 rounded text-ink-500 font-medium">
+                      {location}
+                    </span>
+                  </a>
+                )}
                 <form action={signOut}>
                   <button type="submit" className="text-xs text-ink-400 hover:text-ink-700 transition-colors font-hebrew">
                     {isHe ? 'יציאה' : 'Sign out'}
@@ -85,16 +98,24 @@ export function ParshaList({ parshiyos, isAdmin }: ParshaListProps) {
               const total = seferParshiyos.length;
               const done = seferParshiyos.filter((p) => p.aliyos.every((a) => a.done)).length;
               const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+              const hasCurrent = seferParshiyos.some((p) => p.isCurrent);
 
               return (
                 <button
                   key={sefer.nameEn}
                   onClick={() => setSelectedSefer(sefer)}
-                  className="card p-6 text-start hover:bg-parchment-50 transition-colors"
+                  className={`card p-6 text-start hover:bg-parchment-50 transition-colors ${hasCurrent ? 'ring-2 ring-sage-400' : ''}`}
                 >
-                  <h2 className="text-3xl font-hebrew font-bold text-ink-900 mb-1">
-                    {isHe ? sefer.nameHe : sefer.nameEn}
-                  </h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-3xl font-hebrew font-bold text-ink-900">
+                      {isHe ? sefer.nameHe : sefer.nameEn}
+                    </h2>
+                    {hasCurrent && (
+                      <span className="text-xs font-medium px-1.5 py-0.5 bg-sage-100 text-sage-700 rounded-full">
+                        {isHe ? 'השבוע' : 'This week'}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-ink-500 mb-4 font-hebrew">
                     {isHe ? sefer.nameEn : sefer.nameHe} · {total} {isHe ? 'פרשיות' : 'parshiyos'}
                   </p>
@@ -148,7 +169,7 @@ export function ParshaList({ parshiyos, isAdmin }: ParshaListProps) {
             const allDone = parsha.aliyos.every((a) => a.done);
 
             return (
-              <div key={parsha.id} className="card overflow-hidden">
+              <div key={parsha.id} className={`card overflow-hidden ${parsha.isCurrent ? 'ring-2 ring-sage-400' : ''}`}>
                 <button
                   onClick={() => setExpandedId(isOpen ? null : parsha.id)}
                   className="w-full p-5 flex items-center justify-between hover:bg-parchment-50 transition-colors text-start"
@@ -175,6 +196,11 @@ export function ParshaList({ parshiyos, isAdmin }: ParshaListProps) {
                       <h3 className="text-2xl font-hebrew font-semibold text-ink-900">
                         {parsha.name}
                       </h3>
+                      {parsha.isCurrent && (
+                        <span className="text-xs font-medium px-1.5 py-0.5 bg-sage-100 text-sage-700 rounded-full">
+                          {isHe ? 'השבוע' : 'This week'}
+                        </span>
+                      )}
                     </div>
                     <div className="flex gap-1.5 mt-1.5 ms-8">
                       {parsha.aliyos.map((a) => (
