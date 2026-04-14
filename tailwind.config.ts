@@ -26,16 +26,17 @@ const config: Config = {
           800: '#2a2a2a',
           900: '#1a1a1a',
         },
+        // Royal blue accent — replaces old sage green
         sage: {
-          50:  '#f2f7f2',
-          100: '#e8f0e8',
-          200: '#d1e1d1',
-          300: '#a8c9a8',
-          400: '#7eb17e',
-          500: '#5a9a5a',
-          600: '#4a8a4a',
-          700: '#3a7a3a',
-          900: '#1a3a1a',
+          50:  '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#3b82f6',
+          500: '#1d4ed8',  // royal blue — primary interactive
+          600: '#1e40af',
+          700: '#1e3a8a',
+          900: '#0f1f4d',
         },
       },
       fontFamily: {

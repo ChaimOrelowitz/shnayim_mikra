@@ -7,12 +7,13 @@ import { AliyahCard } from './AliyahCard';
 import { markParshaComplete, exitUserMode } from '@/app/actions';
 import { hebrewYearLabel } from '@/lib/hebcal';
 
+// Royal progression: deep indigo → navy → royal blue → teal → emerald
 const SEFARIM = [
-  { nameHe: 'בראשית', nameEn: 'Bereishit', min: 1,  max: 12, color: '#b45309' },
-  { nameHe: 'שמות',   nameEn: 'Shemot',    min: 13, max: 23, color: '#1d4ed8' },
-  { nameHe: 'ויקרא',  nameEn: 'Vayikra',   min: 24, max: 33, color: '#7c3aed' },
-  { nameHe: 'במדבר',  nameEn: 'Bamidbar',  min: 34, max: 43, color: '#b08000' },
-  { nameHe: 'דברים',  nameEn: 'Devarim',   min: 44, max: 54, color: '#15803d' },
+  { nameHe: 'בראשית', nameEn: 'Bereishit', min: 1,  max: 12, color: '#312e81' }, // deep indigo
+  { nameHe: 'שמות',   nameEn: 'Shemot',    min: 13, max: 23, color: '#1e3a8a' }, // deep navy
+  { nameHe: 'ויקרא',  nameEn: 'Vayikra',   min: 24, max: 33, color: '#1d4ed8' }, // royal blue
+  { nameHe: 'במדבר',  nameEn: 'Bamidbar',  min: 34, max: 43, color: '#0e7490' }, // deep teal
+  { nameHe: 'דברים',  nameEn: 'Devarim',   min: 44, max: 54, color: '#065f46' }, // deep emerald
 ];
 
 function ProgressRing({ pct, color }: { pct: number; color: string }) {
@@ -134,7 +135,7 @@ export function ParshaList({
         </header>
 
         <main className="page-container py-8">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-wrap justify-center gap-4">
             {SEFARIM.map((sefer) => {
               const seferParshiyos = parshiyos.filter(
                 (p) => p.order >= sefer.min && p.order <= sefer.max
@@ -146,13 +147,13 @@ export function ParshaList({
               const isComplete = pct === 100 && total > 0;
 
               return (
+                <div key={sefer.nameEn} className="w-full sm:w-[47%] lg:w-[30%]">
                 <button
-                  key={sefer.nameEn}
                   onClick={() => setSelectedSefer(sefer)}
-                  className="relative bg-white rounded-2xl border border-parchment-200 shadow-sm hover:shadow-md transition-all duration-200 text-start overflow-hidden group"
+                  className="relative w-full bg-white rounded-2xl border border-parchment-200 shadow-sm hover:shadow-lg transition-all duration-200 text-start overflow-hidden group"
                 >
-                  {/* Color strip */}
-                  <div className="h-1.5 w-full" style={{ backgroundColor: sefer.color }} />
+                  {/* Color banner */}
+                  <div className="h-3 w-full" style={{ backgroundColor: sefer.color }} />
 
                   <div className="p-5">
                     <div className="flex items-center gap-4">
@@ -202,6 +203,7 @@ export function ParshaList({
                     </svg>
                   </div>
                 </button>
+                </div>
               );
             })}
           </div>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { signOut } from '@/app/actions';
 import { useLanguage } from '@/lib/language';
 
-export function UserMenu() {
+export function UserMenu({ dark = false }: { dark?: boolean }) {
   const [open, setOpen] = useState(false);
   const { lang, toggle } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
@@ -23,7 +23,11 @@ export function UserMenu() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="User menu"
-        className="p-2 rounded-full hover:bg-parchment-100 transition-colors text-ink-500 hover:text-ink-800"
+        className={`p-2 rounded-full transition-colors ${
+          dark
+            ? 'text-white/80 hover:text-white hover:bg-white/10'
+            : 'text-ink-500 hover:text-ink-800 hover:bg-parchment-100'
+        }`}
       >
         {/* Person icon */}
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
