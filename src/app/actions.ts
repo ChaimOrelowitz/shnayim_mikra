@@ -172,24 +172,31 @@ export async function markParshaComplete(parshaId: string, done: boolean, hebrew
 
   await ensureProfile();
 
-  const aliyos = await prisma.aliyah.findMany({ where: { parshaId } });
+  // Fetch all aliyos + their pesukim in one query, then batch everything into one transaction
+  const aliyos = await prisma.aliyah.findMany({
+    where: { parshaId },
+    include: { pesukim: true },
+  });
 
-  for (const aliyah of aliyos) {
-    await prisma.userAliyahProgress.upsert({
+  const aliyahOps = aliyos.map(aliyah =>
+    prisma.userAliyahProgress.upsert({
       where: { userId_aliyahId_hebrewYear: { userId, aliyahId: aliyah.id, hebrewYear } },
       update: { done, mikra1: done, mikra2: done, targum: done },
       create: { userId, aliyahId: aliyah.id, hebrewYear, done, mikra1: done, mikra2: done, targum: done },
-    });
+    })
+  );
 
-    const pesukim = await prisma.pasuk.findMany({ where: { aliyahId: aliyah.id } });
-    for (const p of pesukim) {
-      await prisma.userPasukProgress.upsert({
+  const pasukOps = aliyos.flatMap(aliyah =>
+    aliyah.pesukim.map(p =>
+      prisma.userPasukProgress.upsert({
         where: { userId_pasukId_hebrewYear: { userId, pasukId: p.id, hebrewYear } },
         update: { done, mikra1: done, mikra2: done, targum: done },
         create: { userId, pasukId: p.id, hebrewYear, done, mikra1: done, mikra2: done, targum: done },
-      });
-    }
-  }
+      })
+    )
+  );
+
+  await prisma.$transaction([...aliyahOps, ...pasukOps]);
 
   revalidatePath('/');
   revalidatePath('/parsha/[id]', 'page');

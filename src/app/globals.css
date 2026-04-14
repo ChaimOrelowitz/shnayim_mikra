@@ -5,10 +5,16 @@
 @layer base {
   html {
     @apply antialiased;
+    font-family: var(--font-poppins), 'Open Sans', system-ui, sans-serif;
   }
-  
+
   body {
     @apply bg-parchment-50 text-ink-800;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-alike), Georgia, serif;
+    @apply text-ink-900;
   }
 
   * {
@@ -30,7 +36,7 @@
   }
 
   .btn-primary {
-    @apply bg-sage-500 text-white hover:bg-sage-400 focus-visible:ring-sage-500;
+    @apply bg-sage-400 text-white hover:bg-sage-500 focus-visible:ring-sage-400;
   }
 
   .btn-secondary {
@@ -42,7 +48,7 @@
   }
 
   .toggle {
-    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .toggle-thumb {
@@ -53,5 +59,9 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .font-display {
+    font-family: var(--font-alike), Georgia, serif;
   }
 }

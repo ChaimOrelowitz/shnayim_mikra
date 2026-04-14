@@ -1,14 +1,21 @@
 import type { Metadata, Viewport } from 'next';
-import { Crimson_Text } from 'next/font/google';
+import { Alike, Poppins } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/lib/language';
 import { LanguageToggle } from '@/components/LanguageToggle';
 
-const crimsonText = Crimson_Text({
-  weight: ['400', '600', '700'],
+const alike = Alike({
+  weight: ['400'],
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-crimson',
+  variable: '--font-alike',
+});
+
+const poppins = Poppins({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-poppins',
 });
 
 export const metadata: Metadata = {
@@ -34,7 +41,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={crimsonText.variable}>
+      <body className={`${alike.variable} ${poppins.variable}`}>
         <LanguageProvider>
           {children}
           <LanguageToggle />
