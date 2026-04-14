@@ -29,7 +29,7 @@ model Parsha {
   id          String   @id @default(cuid())
   name        String   // Hebrew name
   englishName String?  // English name for filename matching
-  order       Int      @unique
+  order       Float    @unique
   aliyos      Aliyah[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

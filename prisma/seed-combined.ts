@@ -2,37 +2,42 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-function pesukim(ranges: { perek: number; from: number; to: number }[]) {
-  return ranges.flatMap(({ perek, from, to }) =>
-    Array.from({ length: to - from + 1 }, (_, i) => ({ perek, pasuk: from + i }))
-  );
-}
+const COMBINED: { name: string; englishName: string; order: number }[] = [
+  { name: 'ויקהל-פקודי',    englishName: 'Vayakhel-Pekudei',       order: 22.5 },
+  { name: 'תזריע-מצורע',    englishName: 'Tazria-Metzora',          order: 27.5 },
+  { name: 'אחרי מות-קדושים', englishName: 'Acharei Mot-Kedoshim',   order: 29.5 },
+  { name: 'בהר-בחוקותי',    englishName: 'Behar-Bechukotai',        order: 32.5 },
+  { name: 'חקת-בלק',        englishName: 'Chukat-Balak',            order: 39.5 },
+  { name: 'מטות-מסעי',      englishName: 'Matot-Masei',             order: 42.5 },
+  { name: 'נצבים-וילך',     englishName: 'Nitzavim-Vayelech',       order: 51.5 },
+];
 
 async function main() {
-  // ── Tazria-Metzora combined (order 101) ──────────────────────────────────
-  const existing = await prisma.parsha.findFirst({ where: { order: 101 } });
-  if (existing) {
-    console.log('⏭️  Tazria-Metzora already exists');
-  } else {
+  // Move Tazria-Metzora from old order 101 if it exists
+  const old = await prisma.parsha.findFirst({ where: { order: 101 } });
+  if (old) {
+    await prisma.parsha.update({ where: { id: old.id }, data: { order: 27.5 } });
+    console.log('✅ Moved Tazria-Metzora from order 101 → 27.5');
+  }
+
+  for (const { name, englishName, order } of COMBINED) {
+    const existing = await prisma.parsha.findFirst({ where: { order } });
+    if (existing) {
+      console.log(`⏭️  Skipping ${englishName} (already at order ${order})`);
+      continue;
+    }
+
     await prisma.parsha.create({
       data: {
-        name: 'תזריע-מצורע',
-        englishName: 'Tazria-Metzora',
-        order: 101,
+        name,
+        englishName,
+        order,
         aliyos: {
-          create: [
-            { number: 1, pesukim: { create: pesukim([{ perek: 12, from: 1, to: 8 }]) } },
-            { number: 2, pesukim: { create: pesukim([{ perek: 13, from: 1, to: 17 }]) } },
-            { number: 3, pesukim: { create: pesukim([{ perek: 13, from: 18, to: 28 }]) } },
-            { number: 4, pesukim: { create: pesukim([{ perek: 13, from: 29, to: 59 }]) } },
-            { number: 5, pesukim: { create: pesukim([{ perek: 14, from: 1, to: 32 }]) } },
-            { number: 6, pesukim: { create: pesukim([{ perek: 14, from: 33, to: 57 }, { perek: 15, from: 1, to: 15 }]) } },
-            { number: 7, pesukim: { create: pesukim([{ perek: 15, from: 16, to: 33 }]) } },
-          ],
+          create: [1, 2, 3, 4, 5, 6, 7].map(n => ({ number: n })),
         },
       },
     });
-    console.log('✅ Seeded Tazria-Metzora combined');
+    console.log(`✅ Added ${englishName} (order ${order})`);
   }
 }
 
