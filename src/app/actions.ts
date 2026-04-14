@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
@@ -70,6 +71,23 @@ export async function updateProfile(data: {
   });
   revalidatePath('/');
   revalidatePath('/settings');
+}
+
+export async function setViewAsUser(on: boolean) {
+  await getRequiredAdmin();
+  const jar = await cookies();
+  if (on) {
+    jar.set('shnayim-view-as-user', '1', { path: '/', httpOnly: true, maxAge: 86400 });
+  } else {
+    jar.delete('shnayim-view-as-user');
+  }
+  redirect(on ? '/' : '/admin');
+}
+
+export async function exitUserMode() {
+  const jar = await cookies();
+  jar.delete('shnayim-view-as-user');
+  redirect('/admin');
 }
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────

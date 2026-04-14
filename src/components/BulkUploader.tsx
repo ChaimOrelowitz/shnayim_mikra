@@ -26,6 +26,13 @@ interface ParsedFile {
   status: 'matched' | 'no-parsha' | 'no-aliyah' | 'bad-filename';
 }
 
+const SEFARIM = [
+  { name: 'Bereishit', min: 1,  max: 12.9 },
+  { name: 'Shemot',   min: 13, max: 23.9 },
+  { name: 'Vayikra',  min: 24, max: 33.9 },
+  { name: 'Bamidbar', min: 34, max: 43.9 },
+  { name: 'Devarim',  min: 44, max: 54.9 },
+];
 
 function normalize(s: string) {
   return s.toLowerCase()
@@ -68,7 +75,29 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
   const [parsed, setParsed] = useState<ParsedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
+  const [uploadedAliyahIds, setUploadedAliyahIds] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Library state
+  const [expandedSefers, setExpandedSefers] = useState<Set<string>>(new Set());
+  const [expandedParshiyos, setExpandedParshiyos] = useState<Set<string>>(new Set());
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  function toggleSefer(name: string) {
+    setExpandedSefers(prev => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  }
+
+  function toggleParsha(id: string) {
+    setExpandedParshiyos(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   function handleFiles(files: FileList | null) {
     if (!files) return;
@@ -93,6 +122,7 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
         if (!res.ok) throw new Error(`Storage upload failed: ${res.status}`);
         await savePdfPath(item.matchedAliyah!.id, publicUrl);
         newResults[item.file.name] = 'ok';
+        setUploadedAliyahIds(prev => new Set([...prev, item.matchedAliyah!.id]));
       } catch (e: unknown) {
         newResults[item.file.name] = e instanceof Error ? e.message : 'Unknown error';
       }
@@ -107,13 +137,37 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
 
   return (
     <div className="min-h-screen bg-parchment-50">
+      {/* PDF preview modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-3xl h-[80vh] flex flex-col overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-parchment-200">
+              <p className="text-sm text-ink-600 font-medium truncate">{previewUrl.split('/').pop()}</p>
+              <button
+                onClick={() => setPreviewUrl(null)}
+                className="text-ink-400 hover:text-ink-700 transition-colors text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <iframe src={previewUrl} className="flex-1 w-full" title="PDF preview" />
+          </div>
+        </div>
+      )}
+
       <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="page-container py-5 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-ink-900">Bulk PDF Upload</h1>
             <p className="text-sm text-ink-500 mt-0.5">Files must be named: <code className="bg-parchment-100 px-1 rounded">Parsha Name 3.pdf</code></p>
           </div>
-          <a href="/" className="text-sm text-sage-600 hover:text-sage-700">← Back</a>
+          <a href="/admin" className="text-sm text-sage-600 hover:text-sage-700">← Back</a>
         </div>
       </header>
 
@@ -132,6 +186,7 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
             <input ref={inputRef} type="file" multiple accept=".pdf" className="hidden" onChange={e => handleFiles(e.target.files)} />
           </div>
 
+          {/* Upload results */}
           {parsed.length > 0 && (
             <>
               {matched.length > 0 && (
@@ -199,7 +254,7 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
                           <td className="px-4 py-2.5 text-ink-700 font-mono text-xs">{item.file.name}</td>
                           <td className="px-4 py-2.5 text-red-600 text-xs">
                             {item.status === 'bad-filename' && 'Must end with a number (e.g. "Bereishit 1.pdf")'}
-                            {item.status === 'no-parsha' && `"${item.parsedName}" not found — check the name list →`}
+                            {item.status === 'no-parsha' && `"${item.parsedName}" not found — check the name list below`}
                             {item.status === 'no-aliyah' && `Aliyah ${item.parsedNumber} not found for ${item.matchedParsha?.englishName}`}
                           </td>
                         </tr>
@@ -210,6 +265,102 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
               )}
             </>
           )}
+
+          {/* ── Library: collapsible parsha list ── */}
+          <div>
+            <h2 className="text-base font-semibold text-ink-800 mb-3">PDF Library</h2>
+            <div className="space-y-2">
+              {SEFARIM.map(sefer => {
+                const seferParshiyos = parshiyos.filter(
+                  p => p.order >= sefer.min && p.order <= sefer.max
+                );
+                const isOpen = expandedSefers.has(sefer.name);
+                const totalPdfs = seferParshiyos.reduce(
+                  (sum, p) => sum + p.aliyos.filter(a => a.pdfPath || uploadedAliyahIds.has(a.id)).length, 0
+                );
+                const totalAliyos = seferParshiyos.reduce((sum, p) => sum + p.aliyos.length, 0);
+
+                return (
+                  <div key={sefer.name} className="card overflow-hidden">
+                    <button
+                      onClick={() => toggleSefer(sefer.name)}
+                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-parchment-50 transition-colors text-start"
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className={`w-4 h-4 text-ink-400 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="font-semibold text-ink-800">{sefer.name}</span>
+                      </div>
+                      <span className="text-xs text-ink-400">{totalPdfs}/{totalAliyos} PDFs</span>
+                    </button>
+
+                    {isOpen && (
+                      <div className="border-t border-parchment-200 divide-y divide-parchment-100">
+                        {seferParshiyos.map(p => {
+                          const isParshaOpen = expandedParshiyos.has(p.id);
+                          const pdfCount = p.aliyos.filter(a => a.pdfPath || uploadedAliyahIds.has(a.id)).length;
+                          const isDouble = !Number.isInteger(p.order);
+
+                          return (
+                            <div key={p.id}>
+                              <button
+                                onClick={() => toggleParsha(p.id)}
+                                className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-parchment-50 transition-colors text-start pl-10"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <svg
+                                    className={`w-3.5 h-3.5 text-ink-300 transition-transform ${isParshaOpen ? 'rotate-90' : ''}`}
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                  <span className={`text-sm text-ink-800 ${isDouble ? 'text-amber-700' : ''}`}>
+                                    {p.englishName}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-ink-400">{pdfCount}/{p.aliyos.length}</span>
+                              </button>
+
+                              {isParshaOpen && (
+                                <div className="pl-14 pr-4 pb-3 flex gap-1.5 flex-wrap">
+                                  {p.aliyos.map(a => {
+                                    const hasPdf = !!(a.pdfPath || uploadedAliyahIds.has(a.id));
+                                    const url = uploadedAliyahIds.has(a.id)
+                                      ? null // URL not available in client after upload, just show green
+                                      : a.pdfPath;
+                                    return (
+                                      <button
+                                        key={a.id}
+                                        title={hasPdf ? `Preview aliyah ${a.number}` : `No PDF for aliyah ${a.number}`}
+                                        onClick={() => url && setPreviewUrl(url)}
+                                        className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
+                                          hasPdf
+                                            ? url
+                                              ? 'bg-sage-100 text-sage-700 hover:bg-sage-200 cursor-pointer'
+                                              : 'bg-sage-100 text-sage-700 cursor-default'
+                                            : 'bg-parchment-200 text-ink-400 cursor-default'
+                                        }`}
+                                      >
+                                        {a.number}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </main>
     </div>

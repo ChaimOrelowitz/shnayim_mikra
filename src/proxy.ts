@@ -40,8 +40,9 @@ export async function proxy(request: NextRequest) {
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
   const isAdmin = profile?.role === 'ADMIN';
 
-  // Admins going to user routes → send to admin dashboard
-  if (isAdmin && (pathname === '/' || pathname.startsWith('/parsha') || pathname.startsWith('/aliyah'))) {
+  // Admins going to user routes → send to admin dashboard (unless "view as user" cookie set)
+  const viewAsUser = request.cookies.get('shnayim-view-as-user')?.value === '1';
+  if (isAdmin && !viewAsUser && (pathname === '/' || pathname.startsWith('/parsha') || pathname.startsWith('/aliyah'))) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 

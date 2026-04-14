@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 import { ParshaList } from '@/components/ParshaList';
 import { getCurrentParsha } from '@/lib/hebcal';
 
@@ -15,6 +16,9 @@ export default async function HomePage() {
     : null;
 
   const location = profile?.location ?? 'CHUL';
+
+  const jar = await cookies();
+  const isViewingAsUser = jar.get('shnayim-view-as-user')?.value === '1';
 
   const parshiyos = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },
@@ -51,6 +55,7 @@ export default async function HomePage() {
       parshiyos={parshiyosWithProgress}
       isAdmin={profile?.role === 'ADMIN'}
       location={location}
+      isViewingAsUser={isViewingAsUser}
     />
   );
 }

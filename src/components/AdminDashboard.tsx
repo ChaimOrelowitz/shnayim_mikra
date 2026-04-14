@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { signOut, setUserRole, deleteUser } from '@/app/actions';
+import { signOut, setUserRole, deleteUser, setViewAsUser } from '@/app/actions';
+import type { CalendarEntry } from '@/lib/hebcal';
 
 interface User {
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   role: 'USER' | 'ADMIN';
   createdAt: Date;
   _count: { aliyahProgress: number };
@@ -31,6 +34,7 @@ interface AdminDashboardProps {
   totalAliyos: number;
   totalParshiyos: number;
   parshiyosWithPdfs: Parsha[];
+  calendar: CalendarEntry[];
 }
 
 const SEFARIM = [
@@ -41,14 +45,23 @@ const SEFARIM = [
   { name: 'Devarim',  min: 44, max: 54.9 },
 ];
 
-type Tab = 'users' | 'pdfs';
+type Tab = 'users' | 'pdfs' | 'calendar';
 
-export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos, parshiyosWithPdfs }: AdminDashboardProps) {
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', weekday: 'short' });
+}
+
+export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos, parshiyosWithPdfs, calendar }: AdminDashboardProps) {
   const [tab, setTab] = useState<Tab>('users');
   const [isPending, startTransition] = useTransition();
 
   const totalPdfs = parshiyosWithPdfs.reduce((sum, p) => sum + p.aliyos.filter(a => a.pdfPath).length, 0);
   const totalAliyosCount = parshiyosWithPdfs.reduce((sum, p) => sum + p.aliyos.length, 0);
+
+  const today = new Date().toISOString().slice(0, 10);
+  // Find the index of the first upcoming entry (on or after today)
+  const currentWeekIdx = calendar.findIndex(e => e.date >= today);
 
   return (
     <div className="min-h-screen bg-parchment-50">
@@ -59,6 +72,14 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
             <p className="text-sm text-ink-400">{currentUser.email}</p>
           </div>
           <div className="flex items-center gap-3">
+            <form action={setViewAsUser.bind(null, true)}>
+              <button
+                type="submit"
+                className="text-xs text-sage-600 hover:text-sage-700 font-medium transition-colors"
+              >
+                View as user →
+              </button>
+            </form>
             <a href="/settings" className="text-xs text-ink-400 hover:text-ink-700 transition-colors">
               Settings
             </a>
@@ -72,7 +93,7 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
 
         {/* Tabs */}
         <div className="page-container flex gap-6 border-t border-parchment-200">
-          {(['users', 'pdfs'] as Tab[]).map(t => (
+          {(['users', 'pdfs', 'calendar'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -82,7 +103,9 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
                   : 'border-transparent text-ink-400 hover:text-ink-700'
               }`}
             >
-              {t === 'users' ? `Users (${users.length})` : `PDFs (${totalPdfs}/${totalAliyosCount})`}
+              {t === 'users'    ? `Users (${users.length})` :
+               t === 'pdfs'     ? `PDFs (${totalPdfs}/${totalAliyosCount})` :
+               'Calendar'}
             </button>
           ))}
           <a
@@ -101,6 +124,7 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
             <table className="w-full text-sm">
               <thead className="bg-parchment-50 border-b border-parchment-200">
                 <tr>
+                  <th className="text-left px-4 py-3 text-ink-500 font-medium">Name</th>
                   <th className="text-left px-4 py-3 text-ink-500 font-medium">Email</th>
                   <th className="text-left px-4 py-3 text-ink-500 font-medium">Role</th>
                   <th className="text-left px-4 py-3 text-ink-500 font-medium">Aliyos done</th>
@@ -111,7 +135,12 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
               <tbody className="divide-y divide-parchment-100">
                 {users.map(u => (
                   <tr key={u.id} className="hover:bg-parchment-50">
-                    <td className="px-4 py-3 text-ink-800">{u.email}</td>
+                    <td className="px-4 py-3 text-ink-800 font-medium">
+                      {u.firstName || u.lastName
+                        ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
+                        : <span className="text-ink-400 italic">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-ink-500 text-xs">{u.email}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                         u.role === 'ADMIN' ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600'
@@ -155,7 +184,7 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-ink-400">No users yet</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-ink-400">No users yet</td>
                   </tr>
                 )}
               </tbody>
@@ -209,6 +238,57 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* ── Calendar tab ── */}
+        {tab === 'calendar' && (
+          <div className="card overflow-hidden">
+            <div className="bg-parchment-100 border-b border-parchment-200 px-4 py-3 flex items-center justify-between">
+              <h2 className="font-semibold text-ink-800">Upcoming parshiyos</h2>
+              <p className="text-xs text-ink-400">Source: Hebcal API</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-parchment-50 border-b border-parchment-200">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-ink-500 font-medium w-44">Shabbat</th>
+                    <th className="text-left px-4 py-3 text-ink-500 font-medium">Chutz LaAretz</th>
+                    <th className="text-left px-4 py-3 text-ink-500 font-medium">Eretz Yisrael</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-parchment-100">
+                  {calendar.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-ink-400">
+                        Could not load calendar — check network
+                      </td>
+                    </tr>
+                  )}
+                  {calendar.map((entry, i) => {
+                    const isCurrent = i === currentWeekIdx;
+                    const differs = entry.chul !== entry.ey && entry.chul && entry.ey;
+                    return (
+                      <tr
+                        key={entry.date}
+                        className={`${isCurrent ? 'bg-sage-50' : 'hover:bg-parchment-50'}`}
+                      >
+                        <td className={`px-4 py-2.5 text-xs ${isCurrent ? 'font-semibold text-sage-800' : 'text-ink-400'}`}>
+                          {formatDate(entry.date)}
+                          {isCurrent && <span className="ml-1.5 text-sage-600">(this week)</span>}
+                        </td>
+                        <td className={`px-4 py-2.5 ${differs ? 'font-medium text-amber-700' : 'text-ink-800'}`}>
+                          {entry.chul ?? <span className="text-ink-300">—</span>}
+                        </td>
+                        <td className={`px-4 py-2.5 ${differs ? 'font-medium text-amber-700' : 'text-ink-800'}`}>
+                          {entry.ey ?? <span className="text-ink-300">—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </main>

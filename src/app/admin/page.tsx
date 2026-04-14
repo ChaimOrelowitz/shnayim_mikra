@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { AdminDashboard } from '@/components/AdminDashboard';
+import { getYearCalendar } from '@/lib/hebcal';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +38,8 @@ export default async function AdminPage() {
     },
   });
 
+  const calendar = await getYearCalendar();
+
   return (
     <AdminDashboard
       currentUser={profile}
@@ -44,6 +47,7 @@ export default async function AdminPage() {
       totalAliyos={totalAliyos}
       totalParshiyos={totalParshiyos}
       parshiyosWithPdfs={parshiyosWithPdfs}
+      calendar={calendar}
     />
   );
 }

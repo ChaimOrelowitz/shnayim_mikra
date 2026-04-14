@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useLanguage } from '@/lib/language';
 import { AliyahCard } from './AliyahCard';
-import { markParshaComplete, signOut } from '@/app/actions';
+import { markParshaComplete, signOut, exitUserMode } from '@/app/actions';
 
 const SEFARIM: { nameHe: string; nameEn: string; min: number; max: number }[] = [
   { nameHe: 'בראשית', nameEn: 'Bereishit', min: 1,  max: 12 },
@@ -35,9 +35,10 @@ interface ParshaListProps {
   parshiyos: Parsha[];
   isAdmin?: boolean;
   location?: 'EY' | 'CHUL';
+  isViewingAsUser?: boolean;
 }
 
-export function ParshaList({ parshiyos, isAdmin, location }: ParshaListProps) {
+export function ParshaList({ parshiyos, isAdmin, location, isViewingAsUser }: ParshaListProps) {
   const { lang } = useLanguage();
   const isHe = lang === 'he';
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -48,6 +49,18 @@ export function ParshaList({ parshiyos, isAdmin, location }: ParshaListProps) {
   if (!selectedSefer) {
     return (
       <div className="min-h-screen bg-parchment-50">
+        {isViewingAsUser && (
+          <div className="bg-amber-50 border-b border-amber-200 py-2">
+            <div className="page-container flex items-center justify-between">
+              <span className="text-xs text-amber-700 font-medium">Admin — viewing as user</span>
+              <form action={exitUserMode}>
+                <button type="submit" className="text-xs text-amber-700 hover:text-amber-900 font-medium">
+                  ← Back to admin
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
         <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="page-container">
             <div className="flex items-center justify-between py-6">
@@ -144,6 +157,18 @@ export function ParshaList({ parshiyos, isAdmin, location }: ParshaListProps) {
 
   return (
     <div className="min-h-screen bg-parchment-50">
+      {isViewingAsUser && (
+        <div className="bg-amber-50 border-b border-amber-200 py-2">
+          <div className="page-container flex items-center justify-between">
+            <span className="text-xs text-amber-700 font-medium">Admin — viewing as user</span>
+            <form action={exitUserMode}>
+              <button type="submit" className="text-xs text-amber-700 hover:text-amber-900 font-medium">
+                ← Back to admin
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="page-container">
           <div className="flex items-center gap-3 py-6">
