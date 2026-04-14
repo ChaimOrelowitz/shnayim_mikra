@@ -27,6 +27,21 @@ async function getRequiredAdmin() {
   return user;
 }
 
+// ─── User management (admin only) ────────────────────────────────────────────
+
+export async function setUserRole(userId: string, role: 'USER' | 'ADMIN') {
+  await getRequiredAdmin();
+  await prisma.profile.update({ where: { id: userId }, data: { role } });
+  revalidatePath('/admin');
+}
+
+export async function deleteUser(userId: string) {
+  await getRequiredAdmin();
+  // Delete profile (cascades progress); Supabase auth user stays unless we call admin API
+  await prisma.profile.delete({ where: { id: userId } });
+  revalidatePath('/admin');
+}
+
 // Called after Supabase signup confirmation to create the profile row
 export async function ensureProfile() {
   const user = await getRequiredUser();
