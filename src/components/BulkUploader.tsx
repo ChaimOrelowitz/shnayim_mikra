@@ -73,7 +73,7 @@ function parseFile(file: File, parshiyos: Parsha[]): ParsedFile {
 export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
   const [parsed, setParsed] = useState<ParsedFile[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [results, setResults] = useState<Record<string, 'ok' | 'error'>>({});
+  const [results, setResults] = useState<Record<string, 'ok' | string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleFiles(files: FileList | null) {
@@ -94,8 +94,8 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
         fd.append('file', item.file);
         await uploadPDF(item.matchedAliyah!.id, fd);
         newResults[item.file.name] = 'ok';
-      } catch {
-        newResults[item.file.name] = 'error';
+      } catch (e: unknown) {
+        newResults[item.file.name] = e instanceof Error ? e.message : 'Unknown error';
       }
     }
 
@@ -175,7 +175,9 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
                         <td className="px-4 py-2.5 text-ink-700">Aliyah {item.parsedNumber}</td>
                         <td className="px-4 py-2.5">
                           {results[item.file.name] === 'ok' && <span className="text-sage-600 font-medium">✓ Uploaded</span>}
-                          {results[item.file.name] === 'error' && <span className="text-red-500 font-medium">✗ Error</span>}
+                          {results[item.file.name] && results[item.file.name] !== 'ok' && (
+                            <span className="text-red-500 font-medium" title={results[item.file.name]}>✗ {results[item.file.name]}</span>
+                          )}
                           {!results[item.file.name] && (
                             item.matchedAliyah?.pdfPath
                               ? <span className="text-amber-600 text-xs">Will overwrite existing</span>
