@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { uploadPDF } from '@/app/actions';
+import { getSignedUploadUrl, savePdfPath } from '@/app/actions';
 
 interface Aliyah {
   id: string;
@@ -93,9 +93,23 @@ export function BulkUploader({ parshiyos }: { parshiyos: Parsha[] }) {
 
     for (const item of toUpload) {
       try {
-        const fd = new FormData();
-        fd.append('file', item.file);
-        await uploadPDF(item.matchedAliyah!.id, fd);
+        // 1. Get a signed upload URL from the server (no file data goes through server)
+        const { signedUrl, publicUrl } = await getSignedUploadUrl(
+          item.matchedAliyah!.id,
+          item.file.name
+        );
+
+        // 2. Upload directly from browser to Supabase storage
+        const res = await fetch(signedUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/pdf' },
+          body: item.file,
+        });
+        if (!res.ok) throw new Error(`Storage upload failed: ${res.status}`);
+
+        // 3. Save the public URL to the DB
+        await savePdfPath(item.matchedAliyah!.id, publicUrl);
+
         newResults[item.file.name] = 'ok';
       } catch (e: unknown) {
         newResults[item.file.name] = e instanceof Error ? e.message : 'Unknown error';

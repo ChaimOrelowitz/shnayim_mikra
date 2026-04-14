@@ -194,6 +194,40 @@ function getSupabaseStorage() {
   );
 }
 
+// Returns a signed upload URL so the client can upload directly to Supabase
+// (avoids Vercel's 4.5MB serverless body limit)
+export async function getSignedUploadUrl(aliyahId: string, filename: string) {
+  await getRequiredAdmin();
+
+  const timestamp = Date.now();
+  const sanitizedName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const path = `${aliyahId}/${timestamp}_${sanitizedName}`;
+
+  const supabase = getSupabaseStorage();
+  const { data, error } = await supabase.storage
+    .from('pdfs')
+    .createSignedUploadUrl(path);
+
+  if (error) throw new Error(error.message);
+
+  const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(path);
+
+  return { signedUrl: data.signedUrl, path, publicUrl: urlData.publicUrl };
+}
+
+// Called after the client finishes uploading directly to Supabase
+export async function savePdfPath(aliyahId: string, publicUrl: string) {
+  await getRequiredAdmin();
+
+  await prisma.aliyah.update({
+    where: { id: aliyahId },
+    data: { pdfPath: publicUrl },
+  });
+
+  revalidatePath('/parsha/[id]', 'page');
+  revalidatePath('/aliyah/[id]', 'page');
+}
+
 export async function uploadPDF(aliyahId: string, formData: FormData) {
   await getRequiredAdmin();
 
