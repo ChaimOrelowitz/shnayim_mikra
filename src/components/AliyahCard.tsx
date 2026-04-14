@@ -49,8 +49,10 @@ export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCard
     { field: 'targum' as const, label: isHe ? 'תרגום' : 'Targum',   checked: aliyah.targum  },
   ];
 
+  const isFullyDone = aliyah.mikra1 && aliyah.mikra2 && aliyah.targum;
+
   return (
-    <div className="card p-4">
+    <div className={`card p-4 transition-all duration-300 ${isFullyDone ? 'border-l-4 border-l-sage-500 bg-sage-50/40' : ''}`}>
       {/* Row 1: aliyah name + done check + view details */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
