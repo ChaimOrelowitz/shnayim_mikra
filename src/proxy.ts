@@ -36,13 +36,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Role-based routing
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } });
-  const isAdmin = profile?.role === 'ADMIN';
+  // Role-based routing — Prisma may not work on Edge, so we guard against failures
+  let isAdmin = false;
+  let isReaderMode = false;
+  try {
+    const profile = await prisma.profile.findUnique({ where: { id: user.id } });
+    isAdmin = profile?.role === 'ADMIN';
+    isReaderMode = profile?.preferredView === 'READER';
+  } catch {
+    // If the DB call fails in Edge runtime, fall through without role-based routing.
+    // Each page does its own server-side auth check on Node.js where Prisma works reliably.
+    return supabaseResponse;
+  }
 
   // Admins going to user routes → send to admin dashboard (unless "view as user" cookie set)
   const viewAsUser = request.cookies.get('shnayim-view-as-user')?.value === '1';
-  const isReaderMode = profile?.preferredView === 'READER';
   if (isAdmin && !viewAsUser && !isReaderMode && (pathname === '/' || pathname.startsWith('/parsha') || pathname.startsWith('/aliyah'))) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
