@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -40,6 +41,34 @@ export async function deleteUser(userId: string) {
   await getRequiredAdmin();
   // Delete profile (cascades progress); Supabase auth user stays unless we call admin API
   await prisma.profile.delete({ where: { id: userId } });
+  revalidatePath('/admin');
+}
+
+export async function inviteUser(email: string, firstName: string, lastName: string) {
+  await getRequiredAdmin();
+
+  const adminSupabase = createAdminClient();
+  const { data, error } = await adminSupabase.auth.admin.inviteUserByEmail(email, {
+    data: { firstName, lastName },
+  });
+
+  if (error) throw new Error(error.message);
+
+  // Pre-create the profile so admin sees the user immediately (role defaults to USER)
+  if (data.user) {
+    await prisma.profile.upsert({
+      where: { id: data.user.id },
+      update: { firstName, lastName },
+      create: {
+        id: data.user.id,
+        email,
+        firstName,
+        lastName,
+        role: 'USER',
+      },
+    });
+  }
+
   revalidatePath('/admin');
 }
 
@@ -112,7 +141,7 @@ async function getOrCreatePasukProgress(userId: string, pasukId: string, hebrewY
 
 export async function updateAliyahProgress(
   aliyahId: string,
-  field: 'done' | 'mikra1' | 'mikra2' | 'targum',
+  field: 'done' | 'mikra1' | 'mikra2' | 'targum' | 'rashiReview',
   value: boolean,
   hebrewYear: number
 ) {
@@ -120,6 +149,18 @@ export async function updateAliyahProgress(
   const userId = user.id;
 
   await ensureProfile();
+
+  // rashiReview is tracked independently — no cascade, no effect on done
+  if (field === 'rashiReview') {
+    await prisma.userAliyahProgress.upsert({
+      where: { userId_aliyahId_hebrewYear: { userId, aliyahId, hebrewYear } },
+      update: { rashiReview: value },
+      create: { userId, aliyahId, hebrewYear, rashiReview: value },
+    });
+    revalidatePath('/');
+    revalidatePath('/parsha/[id]', 'page');
+    return;
+  }
 
   if (field === 'done' && value) {
     await prisma.userAliyahProgress.upsert({

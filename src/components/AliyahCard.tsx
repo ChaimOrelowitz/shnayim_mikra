@@ -15,6 +15,7 @@ interface AliyahCardProps {
     mikra1: boolean;
     mikra2: boolean;
     targum: boolean;
+    rashiReview: boolean;
     pdfPath: string | null;
   };
   parshaId: string;
@@ -29,7 +30,7 @@ export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCard
   const { lang } = useLanguage();
   const isHe = lang === 'he';
 
-  const handleToggle = (field: 'done' | 'mikra1' | 'mikra2' | 'targum', value: boolean) => {
+  const handleToggle = (field: 'done' | 'mikra1' | 'mikra2' | 'targum' | 'rashiReview', value: boolean) => {
     startTransition(async () => {
       await updateAliyahProgress(aliyah.id, field, value, hebrewYear);
     });
@@ -108,6 +109,23 @@ export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCard
           </div>
         ))}
 
+        {/* Rashi review — independent of completion */}
+        <div className="flex items-center gap-1.5 border-l border-parchment-200 pl-4 ml-1">
+          <button
+            onClick={() => handleToggle('rashiReview', !aliyah.rashiReview)}
+            disabled={isPending}
+            title={isHe ? 'חזרת רש"י' : 'Rashi review'}
+            className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold font-hebrew transition-all touch-manipulation ${
+              aliyah.rashiReview
+                ? 'bg-amber-500 border-amber-500 text-white'
+                : 'bg-white border-parchment-300 text-ink-400 hover:border-amber-400 hover:text-amber-500'
+            }`}
+          >
+            ר
+          </button>
+          <span className="text-xs text-ink-500 font-hebrew">{isHe ? 'רש"י' : 'Rashi'}</span>
+        </div>
+
         <div className="ms-auto flex items-center gap-1.5">
           {aliyah.pdfPath ? (
             <>
@@ -161,7 +179,17 @@ export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCard
       {showPdf && aliyah.pdfPath && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/60" onClick={() => setShowPdf(false)}>
           <div className="flex items-center justify-between px-4 py-2 bg-white" onClick={(e) => e.stopPropagation()}>
-            <span className="text-sm font-medium text-ink-700 font-hebrew">{isHe ? 'PDF' : 'PDF'}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-ink-700 font-hebrew">{aliyahLabel(aliyah.number, lang)}</span>
+              <a
+                href={aliyah.pdfPath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-sage-600 hover:text-sage-700 underline"
+              >
+                {isHe ? 'פתח בלשונית חדשה' : 'Open in new tab'}
+              </a>
+            </div>
             <button onClick={() => setShowPdf(false)} className="p-1 text-ink-500 hover:text-ink-800">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

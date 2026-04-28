@@ -82,6 +82,7 @@ export default async function HomePage({
         mikra1: a.userProgress[0]?.mikra1 ?? false,
         mikra2: a.userProgress[0]?.mikra2 ?? false,
         targum: a.userProgress[0]?.targum ?? false,
+        rashiReview: a.userProgress[0]?.rashiReview ?? false,
       })),
     }));
 

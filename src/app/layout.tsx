@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/lib/language';
-import { TopNav } from '@/components/TopNav';
+import { NavWrapper } from '@/components/NavWrapper';
 
 const poppins = Poppins({
   weight: ['300', '400', '500', '600', '700'],
@@ -36,7 +36,7 @@ export default function RootLayout({
       </head>
       <body className={poppins.variable}>
         <LanguageProvider>
-          <TopNav />
+          <NavWrapper />
           {children}
         </LanguageProvider>
       </body>

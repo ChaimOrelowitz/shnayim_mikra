@@ -76,10 +76,11 @@ model UserAliyahProgress {
   aliyah     Aliyah  @relation(fields: [aliyahId], references: [id], onDelete: Cascade)
   hebrewYear Int     @default(5786)
 
-  done   Boolean @default(false)
-  mikra1 Boolean @default(false)
-  mikra2 Boolean @default(false)
-  targum Boolean @default(false)
+  done         Boolean @default(false)
+  mikra1       Boolean @default(false)
+  mikra2       Boolean @default(false)
+  targum       Boolean @default(false)
+  rashiReview  Boolean @default(false)
 
   @@unique([userId, aliyahId, hebrewYear])
 }

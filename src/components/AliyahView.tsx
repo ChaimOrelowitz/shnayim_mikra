@@ -121,9 +121,19 @@ export function AliyahView({ aliyah, pesukim, isAdmin: _isAdmin, hebrewYear }: A
       {showPdf && aliyah.pdfPath && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/60" onClick={() => setShowPdf(false)}>
           <div className="flex items-center justify-between px-4 py-2 bg-white" onClick={(e) => e.stopPropagation()}>
-            <span className="text-sm font-medium text-ink-700 font-hebrew">
-              {aliyah.parsha.name} — {aliyahLabel(aliyah.number, lang)}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-ink-700 font-hebrew">
+                {aliyah.parsha.name} — {aliyahLabel(aliyah.number, lang)}
+              </span>
+              <a
+                href={aliyah.pdfPath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-sage-600 hover:text-sage-700 underline"
+              >
+                {isHe ? 'פתח בלשונית חדשה' : 'Open in new tab'}
+              </a>
+            </div>
             <button onClick={() => setShowPdf(false)} className="p-1 text-ink-500 hover:text-ink-800">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

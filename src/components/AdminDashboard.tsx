@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { signOut, setUserRole, deleteUser, setViewAsUser } from '@/app/actions';
+import { signOut, setUserRole, deleteUser, setViewAsUser, inviteUser } from '@/app/actions';
 import type { CalendarEntry } from '@/lib/hebcal';
 
 interface User {
@@ -55,6 +55,29 @@ function formatDate(dateStr: string) {
 export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos, parshiyosWithPdfs, calendar }: AdminDashboardProps) {
   const [tab, setTab] = useState<Tab>('users');
   const [isPending, startTransition] = useTransition();
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteFirst, setInviteFirst] = useState('');
+  const [inviteLast, setInviteLast] = useState('');
+  const [inviteError, setInviteError] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState('');
+  const [invitePending, startInviteTransition] = useTransition();
+
+  function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setInviteError('');
+    setInviteSuccess('');
+    startInviteTransition(async () => {
+      try {
+        await inviteUser(inviteEmail, inviteFirst, inviteLast);
+        setInviteSuccess(`Invite sent to ${inviteEmail}`);
+        setInviteEmail('');
+        setInviteFirst('');
+        setInviteLast('');
+      } catch (err) {
+        setInviteError(err instanceof Error ? err.message : 'Failed to send invite');
+      }
+    });
+  }
 
   const totalPdfs = parshiyosWithPdfs.reduce((sum, p) => sum + p.aliyos.filter(a => a.pdfPath).length, 0);
   const totalAliyosCount = parshiyosWithPdfs.reduce((sum, p) => sum + p.aliyos.length, 0);
@@ -120,6 +143,57 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
       <main className="page-container py-8">
         {/* ── Users tab ── */}
         {tab === 'users' && (
+          <>
+          {/* Invite form */}
+          <div className="card p-5 mb-6">
+            <h2 className="text-sm font-semibold text-ink-800 mb-4">Invite New User</h2>
+            <form onSubmit={handleInvite} className="flex flex-wrap gap-3 items-end">
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs text-ink-500 mb-1">First name</label>
+                <input
+                  type="text"
+                  value={inviteFirst}
+                  onChange={e => setInviteFirst(e.target.value)}
+                  required
+                  placeholder="Yosef"
+                  className="w-full border border-parchment-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
+                />
+              </div>
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs text-ink-500 mb-1">Last name</label>
+                <input
+                  type="text"
+                  value={inviteLast}
+                  onChange={e => setInviteLast(e.target.value)}
+                  required
+                  placeholder="Cohen"
+                  className="w-full border border-parchment-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
+                />
+              </div>
+              <div className="flex-[2] min-w-[200px]">
+                <label className="block text-xs text-ink-500 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  required
+                  placeholder="user@example.com"
+                  className="w-full border border-parchment-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={invitePending}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50 transition-colors"
+                style={{ backgroundColor: '#1e3a8a' }}
+              >
+                {invitePending ? 'Sending…' : 'Send Invite'}
+              </button>
+            </form>
+            {inviteSuccess && <p className="mt-2 text-xs text-sage-600 font-medium">{inviteSuccess}</p>}
+            {inviteError && <p className="mt-2 text-xs text-red-500">{inviteError}</p>}
+          </div>
+
           <div className="card overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-parchment-50 border-b border-parchment-200">
@@ -190,6 +264,7 @@ export function AdminDashboard({ currentUser, users, totalAliyos, totalParshiyos
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {/* ── PDFs tab ── */}

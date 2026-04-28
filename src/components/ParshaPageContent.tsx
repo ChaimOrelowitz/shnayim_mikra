@@ -11,6 +11,7 @@ interface Aliyah {
   mikra1: boolean;
   mikra2: boolean;
   targum: boolean;
+  rashiReview: boolean;
   pdfPath: string | null;
 }
 
