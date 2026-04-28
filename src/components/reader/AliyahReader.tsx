@@ -15,9 +15,11 @@ interface AliyahReaderProps {
   done: boolean;
   onSaveSpot: (verseId: string) => void;
   onMarkDone: () => void;
+  parshaName?: string;
+  aliyahNumber?: number;
 }
 
-export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDone }, ref) {
+export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDone, parshaName, aliyahNumber }, ref) {
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const verseRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -86,8 +88,12 @@ export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(fu
         </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-ink-900">Bereishis · Aliyah 1</h2>
-            <p className="text-xs text-ink-400">בראשית א:א – א:ח</p>
+            <h2 className="text-xl font-bold text-ink-900 font-hebrew">
+              {parshaName ?? 'Bereishis'}{aliyahNumber != null ? ` · Aliyah ${aliyahNumber}` : ' · Aliyah 1'}
+            </h2>
+            <p className="text-xs text-ink-400 font-hebrew">
+              {verses[0]?.hebrewRef ?? ''}{verses.length > 1 ? ` – ${verses[verses.length - 1]?.hebrewRef}` : ''}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {nextResumeVerse && (

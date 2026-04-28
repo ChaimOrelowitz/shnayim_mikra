@@ -92,6 +92,7 @@ export async function updateProfile(data: {
   firstName?: string;
   lastName?: string;
   location?: 'EY' | 'CHUL';
+  preferredView?: 'CLASSIC' | 'READER';
 }) {
   const user = await getRequiredUser();
   await prisma.profile.update({
@@ -280,6 +281,55 @@ export async function updatePasukProgress(
     });
   }
 
+  revalidatePath('/aliyah/[id]', 'page');
+}
+
+// ─── Reader view progress ────────────────────────────────────────────────────
+
+// Marks all pesukim up to and including pasukId as done (mikra1+mikra2+targum).
+// If it's the last pasuk in the aliyah, marks the aliyah done too.
+export async function readerBookmarkChumash(
+  aliyahId: string,
+  pasukId: string,
+  hebrewYear: number
+) {
+  const user = await getRequiredUser();
+  const userId = user.id;
+  await ensureProfile();
+
+  const pesukim = await prisma.pasuk.findMany({
+    where: { aliyahId },
+    orderBy: [{ perek: 'asc' }, { pasuk: 'asc' }],
+    select: { id: true },
+  });
+
+  const bookmarkIndex = pesukim.findIndex((p) => p.id === pasukId);
+  if (bookmarkIndex === -1) return;
+
+  const toMark = pesukim.slice(0, bookmarkIndex + 1);
+  const isLastPasuk = bookmarkIndex === pesukim.length - 1;
+
+  const pasukOps = toMark.map((p) =>
+    prisma.userPasukProgress.upsert({
+      where: { userId_pasukId_hebrewYear: { userId, pasukId: p.id, hebrewYear } },
+      update: { done: true, mikra1: true, mikra2: true, targum: true },
+      create: { userId, pasukId: p.id, hebrewYear, done: true, mikra1: true, mikra2: true, targum: true },
+    })
+  );
+
+  if (isLastPasuk) {
+    const aliyahOp = prisma.userAliyahProgress.upsert({
+      where: { userId_aliyahId_hebrewYear: { userId, aliyahId, hebrewYear } },
+      update: { done: true, mikra1: true, mikra2: true, targum: true },
+      create: { userId, aliyahId, hebrewYear, done: true, mikra1: true, mikra2: true, targum: true },
+    });
+    await prisma.$transaction([...pasukOps, aliyahOp]);
+  } else {
+    await prisma.$transaction(pasukOps);
+  }
+
+  revalidatePath('/');
+  revalidatePath('/parsha/[id]', 'page');
   revalidatePath('/aliyah/[id]', 'page');
 }
 

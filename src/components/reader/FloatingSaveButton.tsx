@@ -7,18 +7,20 @@ interface FloatingSaveButtonProps {
 
 export function FloatingSaveButton({ label, saved, mode, onClick }: FloatingSaveButtonProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`fixed inset-x-4 bottom-5 z-50 flex h-14 items-center justify-center rounded-full px-6 text-sm font-semibold shadow-xl transition-all sm:hidden active:scale-95 ${
-        saved
-          ? 'bg-green-600 text-white'
-          : mode === 'rashi'
-          ? 'bg-amber-600 text-white hover:bg-amber-700'
-          : 'bg-blue-800 text-white hover:bg-blue-900'
-      }`}
-    >
-      {label}
-    </button>
+    <div className="sm:hidden">
+      <button
+        type="button"
+        onClick={onClick}
+        className={`fixed inset-x-4 bottom-8 z-50 flex h-14 w-[calc(100vw-2rem)] items-center justify-center rounded-full text-sm font-semibold shadow-xl transition-all active:scale-95 ${
+          saved
+            ? 'bg-green-600 text-white'
+            : mode === 'rashi'
+            ? 'bg-amber-600 text-white'
+            : 'bg-blue-800 text-white'
+        }`}
+      >
+        {label}
+      </button>
+    </div>
   );
 }

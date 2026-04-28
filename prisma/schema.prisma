@@ -25,14 +25,20 @@ enum ParshaType {
   COMBINED
 }
 
+enum ViewMode {
+  CLASSIC
+  READER
+}
+
 model Profile {
-  id        String   @id // matches Supabase auth.users UUID
-  email     String   @unique
-  firstName String?
-  lastName  String?
-  role      Role     @default(USER)
-  location  Location @default(CHUL)
-  createdAt DateTime @default(now())
+  id            String   @id // matches Supabase auth.users UUID
+  email         String   @unique
+  firstName     String?
+  lastName      String?
+  role          Role     @default(USER)
+  location      Location @default(CHUL)
+  preferredView ViewMode @default(CLASSIC)
+  createdAt     DateTime @default(now())
 
   aliyahProgress UserAliyahProgress[]
   pasukProgress  UserPasukProgress[]

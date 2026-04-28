@@ -9,12 +9,15 @@ interface Profile {
   lastName: string | null;
   email: string;
   location: 'EY' | 'CHUL';
+  role: 'ADMIN' | 'USER';
+  preferredView: 'CLASSIC' | 'READER';
 }
 
 export function SettingsForm({ profile, backHref }: { profile: Profile; backHref: string }) {
   const [firstName, setFirstName] = useState(profile.firstName ?? '');
   const [lastName, setLastName] = useState(profile.lastName ?? '');
   const [location, setLocation] = useState<'EY' | 'CHUL'>(profile.location);
+  const [preferredView, setPreferredView] = useState<'CLASSIC' | 'READER'>(profile.preferredView);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
   const router = useRouter();
@@ -23,7 +26,7 @@ export function SettingsForm({ profile, backHref }: { profile: Profile; backHref
     e.preventDefault();
     setSaved(false);
     startTransition(async () => {
-      await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), location });
+      await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), location, ...(profile.role === 'ADMIN' && { preferredView }) });
       setSaved(true);
     });
   }
@@ -92,6 +95,31 @@ export function SettingsForm({ profile, backHref }: { profile: Profile; backHref
               ))}
             </div>
           </div>
+
+          {profile.role === 'ADMIN' && (
+            <div>
+              <label className="block text-sm font-medium text-ink-700 mb-2">Reader view</label>
+              <p className="text-xs text-ink-400 mb-3">
+                Classic view shows the PDF. Reader view is an experimental scroll-based reader with Rashi.
+              </p>
+              <div className="flex gap-3">
+                {(['CLASSIC', 'READER'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setPreferredView(mode)}
+                    className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                      preferredView === mode
+                        ? 'bg-ink-900 text-white border-ink-900'
+                        : 'bg-white text-ink-700 border-parchment-300 hover:border-ink-400'
+                    }`}
+                  >
+                    {mode === 'CLASSIC' ? 'Classic (PDF)' : 'Reader (Beta)'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-3 pt-1">
             <button
