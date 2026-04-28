@@ -30,6 +30,7 @@ export default async function HomePage({
 
   const jar = await cookies();
   const isViewingAsUser = jar.get('shnayim-view-as-user')?.value === '1';
+  const isReaderMode = profile?.preferredView === 'READER';
 
   // Year selector
   const thisYear = currentHebrewYear();
@@ -89,7 +90,7 @@ export default async function HomePage({
   return (
     <ParshaList
       parshiyos={parshiyosWithProgress}
-      isAdmin={profile?.role === 'ADMIN'}
+      isAdmin={profile?.role === 'ADMIN' && !isReaderMode}
       location={location}
       isViewingAsUser={isViewingAsUser}
       hebrewYear={hebrewYear}

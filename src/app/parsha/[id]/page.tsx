@@ -52,10 +52,12 @@ export default async function ParshaPage({ params, searchParams }: ParshaPagePro
     })),
   };
 
+  const isReaderMode = profile?.preferredView === 'READER';
+
   return (
     <ParshaPageContent
       parsha={parshaWithProgress}
-      isAdmin={profile?.role === 'ADMIN'}
+      isAdmin={profile?.role === 'ADMIN' && !isReaderMode}
       hebrewYear={hebrewYear}
     />
   );
