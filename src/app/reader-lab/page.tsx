@@ -1,81 +1,61 @@
-'use client';
+import { prisma } from '@/lib/prisma';
+import { ReaderLabClient } from './ReaderLabClient';
 
-import { useEffect, useState } from 'react';
-import { AliyahReader } from '@/components/reader/AliyahReader';
-import { RashiReader } from '@/components/reader/RashiReader';
-import { bereishisAliyah1 } from '@/lib/mock/bereishisAliyah1';
+export const dynamic = 'force-dynamic';
 
-const KEYS = {
-  aliyahSpot: 'readerLab:shnayimLastCompletedVerseId',
-  rashiSpot: 'readerLab:rashiLastCompletedVerseId',
-  aliyahDone: 'readerLab:aliyahDone',
-  rashiDone: 'readerLab:rashiDone',
-} as const;
+export default async function ReaderLabPage() {
+  // Fetch Bereishit Aliyah 1 from DB
+  const aliyah = await prisma.aliyah.findFirst({
+    where: {
+      number: 1,
+      parsha: { englishName: 'Bereishit' },
+    },
+    include: {
+      parsha: true,
+      pesukim: {
+        orderBy: [{ perek: 'asc' }, { pasuk: 'asc' }],
+        include: {
+          rashiComments: { orderBy: { sortOrder: 'asc' } },
+        },
+      },
+    },
+  });
 
-export default function ReaderLabPage() {
-  const [savedVerseId, setSavedVerseId] = useState<string | null>(null);
-  const [savedRashiVerseId, setSavedRashiVerseId] = useState<string | null>(null);
-  const [aliyahDone, setAliyahDone] = useState(false);
-  const [rashiDone, setRashiDone] = useState(false);
-
-  useEffect(() => {
-    setSavedVerseId(localStorage.getItem(KEYS.aliyahSpot));
-    setSavedRashiVerseId(localStorage.getItem(KEYS.rashiSpot));
-    setAliyahDone(localStorage.getItem(KEYS.aliyahDone) === '1');
-    setRashiDone(localStorage.getItem(KEYS.rashiDone) === '1');
-  }, []);
-
-  function saveAliyahSpot(verseId: string) {
-    localStorage.setItem(KEYS.aliyahSpot, verseId);
-    localStorage.setItem(KEYS.aliyahDone, '0');
-    setSavedVerseId(verseId);
-    setAliyahDone(false);
+  if (!aliyah) {
+    return (
+      <main className="min-h-screen bg-parchment-50 flex items-center justify-center">
+        <p className="text-ink-500">No data found — run the seed script first.</p>
+      </main>
+    );
   }
 
-  function saveRashiSpot(verseId: string) {
-    localStorage.setItem(KEYS.rashiSpot, verseId);
-    localStorage.setItem(KEYS.rashiDone, '0');
-    setSavedRashiVerseId(verseId);
-    setRashiDone(false);
-  }
+  // Shape into the VerseItem format the reader components expect
+  const verses = aliyah.pesukim.map((p) => ({
+    id: p.id,
+    ref: `Genesis ${p.perek}:${p.pasuk}`,
+    hebrewRef: `${toHebNum(p.perek)}:${toHebNum(p.pasuk)}`,
+    mikra: p.hebrewText,
+    targum: p.targumText ?? '',
+    rashi: p.rashiComments.map((r) =>
+      r.dibburHamaschil ? `${r.dibburHamaschil} — ${r.text}` : r.text
+    ),
+  }));
 
-  function markAliyahDone() {
-    localStorage.setItem(KEYS.aliyahDone, '1');
-    setAliyahDone(true);
-  }
+  return <ReaderLabClient verses={verses} parshaName={aliyah.parsha.name} aliyahNumber={aliyah.number} />;
+}
 
-  function markRashiDone() {
-    localStorage.setItem(KEYS.rashiDone, '1');
-    setRashiDone(true);
-  }
+// Simple Hebrew numeral for display (aleph-bet, not full gematria)
+const HEB_DIGITS = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט',
+  'י', 'יא', 'יב', 'יג', 'יד', 'טו', 'טז', 'יז', 'יח', 'יט',
+  'כ', 'כא', 'כב', 'כג', 'כד', 'כה', 'כו', 'כז', 'כח', 'כט',
+  'ל', 'לא', 'לב', 'לג', 'לד', 'לה', 'לו', 'לז', 'לח', 'לט',
+  'מ', 'מא', 'מב', 'מג', 'מד', 'מה', 'מו', 'מז', 'מח', 'מט',
+  'נ', 'נא', 'נב', 'נג', 'נד', 'נה', 'נו', 'נז', 'נח', 'נט',
+  'ס', 'סא', 'סב', 'סג', 'סד', 'סה', 'סו', 'סז', 'סח', 'סט',
+  'ע', 'עא', 'עב', 'עג', 'עד', 'עה', 'עו', 'עז', 'עח', 'עט',
+  'פ', 'פא', 'פב', 'פג', 'פד', 'פה', 'פו', 'פז', 'פח', 'פט',
+  'צ', 'צא', 'צב', 'צג', 'צד', 'צה', 'צו', 'צז', 'צח', 'צט', 'ק'];
 
-  return (
-    <main className="min-h-screen bg-parchment-50">
-      {/* Minimal page header */}
-      <div className="border-b border-parchment-200 bg-white px-4 py-3 text-center">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-ink-400">
-          Reader Lab · Experimental
-        </p>
-        <h1 className="font-hebrew text-lg font-semibold text-ink-900">בראשית · פרשת בראשית</h1>
-      </div>
-
-      <div className="px-3 py-6 sm:px-6">
-        <AliyahReader
-          verses={bereishisAliyah1}
-          savedVerseId={savedVerseId}
-          done={aliyahDone}
-          onSaveSpot={saveAliyahSpot}
-          onMarkDone={markAliyahDone}
-        />
-
-        <RashiReader
-          verses={bereishisAliyah1}
-          savedRashiVerseId={savedRashiVerseId}
-          done={rashiDone}
-          onSaveRashiSpot={saveRashiSpot}
-          onMarkRashiDone={markRashiDone}
-        />
-      </div>
-    </main>
-  );
+function toHebNum(n: number): string {
+  return HEB_DIGITS[n] ?? String(n);
 }

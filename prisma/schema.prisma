@@ -20,6 +20,11 @@ enum Location {
   EY
 }
 
+enum ParshaType {
+  SINGLE
+  COMBINED
+}
+
 model Profile {
   id        String   @id // matches Supabase auth.users UUID
   email     String   @unique
@@ -34,13 +39,14 @@ model Profile {
 }
 
 model Parsha {
-  id          String   @id @default(cuid())
-  name        String   // Hebrew name
-  englishName String?  // English name for filename matching
-  order       Float    @unique
+  id          String     @id @default(cuid())
+  name        String
+  englishName String?
+  order       Float      @unique
+  type        ParshaType @default(SINGLE)
   aliyos      Aliyah[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Aliyah {
@@ -57,15 +63,29 @@ model Aliyah {
 }
 
 model Pasuk {
-  id       String  @id @default(cuid())
-  aliyahId String
-  aliyah   Aliyah  @relation(fields: [aliyahId], references: [id], onDelete: Cascade)
-  perek    Int
-  pasuk    Int
+  id          String  @id @default(cuid())
+  aliyahId    String
+  aliyah      Aliyah  @relation(fields: [aliyahId], references: [id], onDelete: Cascade)
+  perek       Int
+  pasuk       Int
+  hebrewText  String  @default("")
+  targumText  String?
 
-  userProgress UserPasukProgress[]
+  rashiComments RashiComment[]
+  userProgress  UserPasukProgress[]
 
   @@unique([aliyahId, perek, pasuk])
+}
+
+model RashiComment {
+  id              String  @id @default(cuid())
+  pasukId         String
+  pasuk           Pasuk   @relation(fields: [pasukId], references: [id], onDelete: Cascade)
+  sortOrder       Int
+  dibburHamaschil String?
+  text            String
+
+  @@index([pasukId])
 }
 
 model UserAliyahProgress {
