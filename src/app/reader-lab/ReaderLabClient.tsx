@@ -36,7 +36,7 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => setInRashiSection(entry.isIntersecting),
-      { threshold: 0.05 }
+      { threshold: 0.75 }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -118,8 +118,9 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
       </div>
 
       <FloatingSaveButton
-        label={justSaved ? '✓ Saved' : inRashiSection ? 'Bookmark Rashi' : 'Bookmark Pesukim'}
+        label={justSaved ? '✓ Saved' : inRashiSection ? 'Bookmark Rashi' : 'Bookmark Chumash'}
         saved={justSaved}
+        mode={inRashiSection ? 'rashi' : 'chumash'}
         onClick={handleFloatingPress}
       />
     </main>

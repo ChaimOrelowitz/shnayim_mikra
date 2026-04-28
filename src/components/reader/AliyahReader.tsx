@@ -148,7 +148,7 @@ export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(fu
                   : 'bg-blue-700 text-white hover:bg-blue-800'
               }`}
             >
-              {justSaved ? '✓ Saved' : 'Bookmark Pesukim'}
+              {justSaved ? '✓ Saved' : 'Bookmark Chumash'}
             </button>
             <button
               type="button"
