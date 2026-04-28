@@ -14,6 +14,7 @@ interface RashiReaderProps {
 export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, onMarkRashiDone }: RashiReaderProps) {
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
+  const [rashiScript, setRashiScript] = useState(false);
   const verseRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
@@ -71,9 +72,21 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
     <section className="mx-auto w-full max-w-2xl pb-16 pt-8">
       {/* Header card */}
       <div className="mb-1 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5 shadow-sm sm:px-7">
-        <p className="mb-1 text-[0.7rem] font-semibold uppercase tracking-widest text-amber-700">
-          רש״י
-        </p>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-widest text-amber-700">רש״י</p>
+          <button
+            type="button"
+            onClick={() => setRashiScript(s => !s)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              rashiScript
+                ? 'bg-amber-600 text-white'
+                : 'border border-amber-300 bg-white text-amber-700 hover:bg-amber-50'
+            }`}
+          >
+            <span className={rashiScript ? 'font-rashi' : 'font-hebrew'}>א</span>
+            {rashiScript ? 'Rashi script' : 'Square script'}
+          </button>
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-ink-900">Rashi · Bereishis 1</h2>
@@ -133,7 +146,7 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
                   {verse.rashi.map((note, i) => (
                     <p
                       key={i}
-                      className="font-hebrew text-base leading-[1.95] tracking-wide text-ink-800"
+                      className={`text-base leading-[1.95] tracking-wide text-ink-800 ${rashiScript ? 'font-rashi' : 'font-hebrew'}`}
                     >
                       {note}
                     </p>

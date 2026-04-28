@@ -43,6 +43,7 @@ const config: Config = {
         sans:   ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
         serif:  ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
         hebrew: ['SBL BibLit', 'David Libre', 'Frank Ruehl CLM', 'serif'],
+        rashi:  ['Mekorot Rashi', 'Frank Ruehl CLM', 'serif'],
       },
     },
   },
