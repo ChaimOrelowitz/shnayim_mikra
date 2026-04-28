@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -34,30 +33,6 @@ export async function proxy(request: NextRequest) {
   // All routes require auth
   if (!user) {
     return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // Role-based routing — Prisma may not work on Edge, so we guard against failures
-  let isAdmin = false;
-  let isReaderMode = false;
-  try {
-    const profile = await prisma.profile.findUnique({ where: { id: user.id } });
-    isAdmin = profile?.role === 'ADMIN';
-    isReaderMode = profile?.preferredView === 'READER';
-  } catch {
-    // If the DB call fails in Edge runtime, fall through without role-based routing.
-    // Each page does its own server-side auth check on Node.js where Prisma works reliably.
-    return supabaseResponse;
-  }
-
-  // Admins going to user routes → send to admin dashboard (unless "view as user" cookie set)
-  const viewAsUser = request.cookies.get('shnayim-view-as-user')?.value === '1';
-  if (isAdmin && !viewAsUser && !isReaderMode && (pathname === '/' || pathname.startsWith('/parsha') || pathname.startsWith('/aliyah'))) {
-    return NextResponse.redirect(new URL('/admin', request.url));
-  }
-
-  // Non-admins trying to access admin routes → send home
-  if (!isAdmin && pathname.startsWith('/admin')) {
-    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return supabaseResponse;

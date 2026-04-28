@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { ParshaList } from '@/components/ParshaList';
 import {
   getCurrentParsha,
@@ -31,6 +32,11 @@ export default async function HomePage({
   const jar = await cookies();
   const isViewingAsUser = jar.get('shnayim-view-as-user')?.value === '1';
   const isReaderMode = profile?.preferredView === 'READER';
+
+  // Admins without reader mode land on /admin, not the user home page
+  if (profile?.role === 'ADMIN' && !isViewingAsUser && !isReaderMode) {
+    redirect('/admin');
+  }
 
   // Year selector
   const thisYear = currentHebrewYear();
