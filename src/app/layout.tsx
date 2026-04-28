@@ -28,12 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" dir="ltr">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=David+Libre:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+      <head />
       <body className={poppins.variable}>
         <LanguageProvider>
           <NavWrapper />

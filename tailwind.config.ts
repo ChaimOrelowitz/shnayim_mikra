@@ -42,7 +42,7 @@ const config: Config = {
       fontFamily: {
         sans:   ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
         serif:  ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
-        hebrew: ['David Libre', 'Frank Ruehl CLM', 'serif'],
+        hebrew: ['SBL BibLit', 'David Libre', 'Frank Ruehl CLM', 'serif'],
       },
     },
   },
