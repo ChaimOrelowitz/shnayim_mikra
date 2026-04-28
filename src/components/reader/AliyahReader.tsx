@@ -1,9 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
 import type { VerseItem } from '@/lib/mock/bereishisAliyah1';
 import { VerseUnit } from './VerseUnit';
-import { FloatingSaveButton } from './FloatingSaveButton';
+
+export interface AliyahReaderHandle {
+  save: () => void;
+  justSaved: boolean;
+}
 
 interface AliyahReaderProps {
   verses: VerseItem[];
@@ -13,7 +17,7 @@ interface AliyahReaderProps {
   onMarkDone: () => void;
 }
 
-export function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDone }: AliyahReaderProps) {
+export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDone }, ref) {
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const verseRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -68,6 +72,8 @@ export function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDon
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1800);
   }, [activeVerseId, onSaveSpot, verses]);
+
+  useImperativeHandle(ref, () => ({ save: handleSave, justSaved }), [handleSave, justSaved]);
 
   const activeVerse = verses.find((v) => v.id === activeVerseId);
 
@@ -142,7 +148,7 @@ export function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDon
                   : 'bg-blue-700 text-white hover:bg-blue-800'
               }`}
             >
-              {justSaved ? '✓ Saved' : 'Save spot'}
+              {justSaved ? '✓ Saved' : 'Bookmark Pesukim'}
             </button>
             <button
               type="button"
@@ -156,12 +162,6 @@ export function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDon
         </div>
       </div>
 
-      {/* Mobile floating save */}
-      <FloatingSaveButton
-        label={justSaved ? '✓ Saved' : 'Save current spot'}
-        saved={justSaved}
-        onClick={handleSave}
-      />
     </section>
   );
-}
+});

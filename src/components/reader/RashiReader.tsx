@@ -1,7 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
 import type { VerseItem } from '@/lib/mock/bereishisAliyah1';
+
+export interface RashiReaderHandle {
+  save: () => void;
+  justSaved: boolean;
+}
 
 interface RashiReaderProps {
   verses: VerseItem[];
@@ -9,9 +14,10 @@ interface RashiReaderProps {
   done: boolean;
   onSaveRashiSpot: (verseId: string) => void;
   onMarkRashiDone: () => void;
+  sectionRef?: React.RefObject<HTMLElement | null>;
 }
 
-export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, onMarkRashiDone }: RashiReaderProps) {
+export const RashiReader = forwardRef<RashiReaderHandle, RashiReaderProps>(function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, onMarkRashiDone, sectionRef }, ref) {
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const [rashiScript, setRashiScript] = useState(false);
@@ -67,11 +73,13 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
     setTimeout(() => setJustSaved(false), 1800);
   }, [activeVerseId, onSaveRashiSpot, versesWithRashi]);
 
+  useImperativeHandle(ref, () => ({ save: handleSave, justSaved }), [handleSave, justSaved]);
+
   const activeVerse = versesWithRashi.find((v) => v.id === activeVerseId);
   const bodyFont = rashiScript ? 'font-rashi' : 'font-hebrew';
 
   return (
-    <section className="mx-auto w-full max-w-2xl pb-16 pt-8">
+    <section ref={sectionRef} className="mx-auto w-full max-w-2xl pb-16 pt-8">
       {/* Header card */}
       <div className="mb-1 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5 shadow-sm sm:px-7">
         <div className="mb-3 flex items-center justify-between">
@@ -190,7 +198,7 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
                 justSaved ? 'bg-green-100 text-green-700' : 'bg-amber-600 text-white hover:bg-amber-700'
               }`}
             >
-              {justSaved ? '✓ Saved' : 'Save Rashi spot'}
+              {justSaved ? '✓ Saved' : 'Bookmark Rashi'}
             </button>
             <button
               type="button"
@@ -205,4 +213,4 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
       </div>
     </section>
   );
-}
+});

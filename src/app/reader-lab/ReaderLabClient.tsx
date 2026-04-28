@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { AliyahReader } from '@/components/reader/AliyahReader';
-import { RashiReader } from '@/components/reader/RashiReader';
+import { useEffect, useRef, useState } from 'react';
+import { AliyahReader, type AliyahReaderHandle } from '@/components/reader/AliyahReader';
+import { RashiReader, type RashiReaderHandle } from '@/components/reader/RashiReader';
+import { FloatingSaveButton } from '@/components/reader/FloatingSaveButton';
 import type { VerseItem } from '@/lib/mock/bereishisAliyah1';
 
 const KEYS = {
@@ -23,6 +24,23 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
   const [savedRashiVerseId, setSavedRashiVerseId] = useState<string | null>(null);
   const [aliyahDone, setAliyahDone] = useState(false);
   const [rashiDone, setRashiDone] = useState(false);
+  const [inRashiSection, setInRashiSection] = useState(false);
+
+  const aliyahRef = useRef<AliyahReaderHandle>(null);
+  const rashiRef = useRef<RashiReaderHandle>(null);
+  const rashiSectionRef = useRef<HTMLElement>(null);
+
+  // Detect when user scrolls into Rashi section
+  useEffect(() => {
+    const el = rashiSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInRashiSection(entry.isIntersecting),
+      { threshold: 0.05 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     setSavedVerseId(localStorage.getItem(KEYS.aliyahSpot));
@@ -55,6 +73,18 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
     setRashiDone(true);
   }
 
+  const handleFloatingPress = () => {
+    if (inRashiSection) {
+      rashiRef.current?.save();
+    } else {
+      aliyahRef.current?.save();
+    }
+  };
+
+  const justSaved = inRashiSection
+    ? (rashiRef.current?.justSaved ?? false)
+    : (aliyahRef.current?.justSaved ?? false);
+
   return (
     <main className="min-h-screen bg-parchment-50">
       <div className="border-b border-parchment-200 bg-white px-4 py-3 text-center">
@@ -68,6 +98,7 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
 
       <div className="px-3 py-6 sm:px-6">
         <AliyahReader
+          ref={aliyahRef}
           verses={verses}
           savedVerseId={savedVerseId}
           done={aliyahDone}
@@ -76,6 +107,8 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
         />
 
         <RashiReader
+          ref={rashiRef}
+          sectionRef={rashiSectionRef}
           verses={verses}
           savedRashiVerseId={savedRashiVerseId}
           done={rashiDone}
@@ -83,6 +116,12 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
           onMarkRashiDone={markRashiDone}
         />
       </div>
+
+      <FloatingSaveButton
+        label={justSaved ? '✓ Saved' : inRashiSection ? 'Bookmark Rashi' : 'Bookmark Pesukim'}
+        saved={justSaved}
+        onClick={handleFloatingPress}
+      />
     </main>
   );
 }
