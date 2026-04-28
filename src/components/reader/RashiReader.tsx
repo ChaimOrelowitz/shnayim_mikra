@@ -136,7 +136,7 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
 
       {/* Rashi entries — only pesukim that have comments */}
       <div className="rounded-2xl border border-amber-100 bg-white px-5 py-8 shadow-sm sm:px-9">
-        <div className="space-y-8">
+        <div className="space-y-5">
           {versesWithRashi.map((verse, index) => {
             const isCompleted = savedIndex >= 0 && index <= savedIndex && !done;
             const isActive = activeVerseId === verse.id;
@@ -162,8 +162,7 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
                   {verse.rashi.map((entry, i) => (
                     <p key={i} className={`${bodyFont} text-base leading-[1.95] text-ink-800`}>
                       {entry.dibburHamaschil && (
-                        // Dibur hamaschil: always square script, always bold
-                        <strong className="font-hebrew font-bold">{entry.dibburHamaschil}. </strong>
+                        <strong className="font-hebrew text-[1.125rem] font-bold">{entry.dibburHamaschil}. </strong>
                       )}
                       {entry.text}
                     </p>
@@ -171,7 +170,7 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
                 </div>
 
                 {index < versesWithRashi.length - 1 && (
-                  <div className="mt-8 border-b border-amber-100" />
+                  <div className="mt-5 border-b border-amber-100" />
                 )}
               </div>
             );

@@ -14,14 +14,14 @@ export function VerseUnit({ verse, isActive, isCompleted, containerRef }: VerseU
       ref={containerRef}
       data-verse-id={verse.id}
       dir="rtl"
-      className={`border-b border-parchment-100 pb-10 transition-opacity duration-300 last:border-b-0 ${
+      className={`border-b border-parchment-100 pb-6 transition-opacity duration-300 last:border-b-0 ${
         isCompleted ? 'opacity-40' : 'opacity-100'
       }`}
     >
       {/* Verse reference */}
       <a
         href={`#${verse.id}`}
-        className={`mb-5 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+        className={`mb-3 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
           isActive
             ? 'bg-blue-100 text-blue-700'
             : 'text-ink-400 hover:bg-parchment-100'
@@ -36,14 +36,14 @@ export function VerseUnit({ verse, isActive, isCompleted, containerRef }: VerseU
       </p>
 
       {/* Second Mikra — same text, smaller and lighter */}
-      <p className="font-hebrew mt-3 text-lg leading-[1.9] tracking-wide text-ink-500">
+      <p className="font-hebrew mt-2 text-lg leading-[1.9] tracking-wide text-ink-500">
         {verse.mikra}
       </p>
 
       {/* Targum — visually distinct: indented, different weight, warm tint */}
       <p
         dir="rtl"
-        className="mt-5 border-r-2 border-parchment-300 pr-4 font-hebrew text-base leading-[1.95] tracking-wide text-ink-600 italic-none"
+        className="mt-3 border-r-2 border-parchment-300 pr-4 font-hebrew text-base leading-[1.95] tracking-wide text-ink-600 italic-none"
       >
         {verse.targum}
       </p>
