@@ -36,9 +36,10 @@ export default async function ReaderLabPage() {
     hebrewRef: `${toHebNum(p.perek)}:${toHebNum(p.pasuk)}`,
     mikra: p.hebrewText,
     targum: p.targumText ?? '',
-    rashi: p.rashiComments.map((r) =>
-      r.dibburHamaschil ? `${r.dibburHamaschil} — ${r.text}` : r.text
-    ),
+    rashi: p.rashiComments.map((r) => ({
+      dibburHamaschil: r.dibburHamaschil,
+      text: r.text,
+    })),
   }));
 
   return <ReaderLabClient verses={verses} parshaName={aliyah.parsha.name} aliyahNumber={aliyah.number} />;

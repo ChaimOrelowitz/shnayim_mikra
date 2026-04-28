@@ -17,15 +17,16 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
   const [rashiScript, setRashiScript] = useState(false);
   const verseRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Only show verses that actually have Rashi comments
+  const versesWithRashi = useMemo(() => verses.filter((v) => v.rashi.length > 0), [verses]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         let best: IntersectionObserverEntry | null = null;
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            if (!best || entry.intersectionRatio > best.intersectionRatio) {
-              best = entry;
-            }
+            if (!best || entry.intersectionRatio > best.intersectionRatio) best = entry;
           }
         }
         if (best) {
@@ -39,19 +40,19 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
     Object.values(verseRefs.current).forEach((el) => el && observer.observe(el));
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [verses.length]);
+  }, [versesWithRashi.length]);
 
   const savedIndex = useMemo(
-    () => verses.findIndex((v) => v.id === savedRashiVerseId),
-    [verses, savedRashiVerseId]
+    () => versesWithRashi.findIndex((v) => v.id === savedRashiVerseId),
+    [versesWithRashi, savedRashiVerseId]
   );
 
   const nextResumeVerse = useMemo(() => {
     if (done) return null;
-    if (savedIndex >= 0 && savedIndex + 1 < verses.length) return verses[savedIndex + 1];
-    if (savedIndex === -1) return verses[0];
+    if (savedIndex >= 0 && savedIndex + 1 < versesWithRashi.length) return versesWithRashi[savedIndex + 1];
+    if (savedIndex === -1) return versesWithRashi[0];
     return null;
-  }, [done, savedIndex, verses]);
+  }, [done, savedIndex, versesWithRashi]);
 
   const handleResume = useCallback(() => {
     if (!nextResumeVerse) return;
@@ -59,14 +60,15 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
   }, [nextResumeVerse]);
 
   const handleSave = useCallback(() => {
-    const id = activeVerseId ?? verses[0]?.id;
+    const id = activeVerseId ?? versesWithRashi[0]?.id;
     if (!id) return;
     onSaveRashiSpot(id);
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1800);
-  }, [activeVerseId, onSaveRashiSpot, verses]);
+  }, [activeVerseId, onSaveRashiSpot, versesWithRashi]);
 
-  const activeVerse = verses.find((v) => v.id === activeVerseId);
+  const activeVerse = versesWithRashi.find((v) => v.id === activeVerseId);
+  const bodyFont = rashiScript ? 'font-rashi' : 'font-hebrew';
 
   return (
     <section className="mx-auto w-full max-w-2xl pb-16 pt-8">
@@ -74,22 +76,34 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
       <div className="mb-1 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5 shadow-sm sm:px-7">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[0.7rem] font-semibold uppercase tracking-widest text-amber-700">רש״י</p>
+
+          {/* Sliding script toggle */}
           <button
             type="button"
-            onClick={() => setRashiScript(s => !s)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              rashiScript
-                ? 'bg-amber-600 text-white'
-                : 'border border-amber-300 bg-white text-amber-700 hover:bg-amber-50'
-            }`}
+            onClick={() => setRashiScript((s) => !s)}
+            aria-label="Toggle Rashi script"
+            className="relative flex h-9 w-20 items-center rounded-full border border-amber-300 bg-white p-1 shadow-inner transition-colors"
           >
-            <span className={rashiScript ? 'font-rashi' : 'font-hebrew'}>א</span>
-            {rashiScript ? 'Rashi script' : 'Square script'}
+            {/* Sliding pill */}
+            <span
+              className={`absolute h-7 w-9 rounded-full bg-amber-500 shadow transition-transform duration-200 ${
+                rashiScript ? 'translate-x-9' : 'translate-x-0'
+              }`}
+            />
+            {/* Square aleph */}
+            <span className={`relative z-10 flex h-7 w-9 items-center justify-center font-hebrew text-lg leading-none transition-colors ${!rashiScript ? 'text-white' : 'text-amber-700'}`}>
+              א
+            </span>
+            {/* Rashi aleph */}
+            <span className={`relative z-10 flex h-7 w-9 items-center justify-center font-rashi text-lg leading-none transition-colors ${rashiScript ? 'text-white' : 'text-amber-700'}`}>
+              א
+            </span>
           </button>
         </div>
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-ink-900">Rashi · Bereishis 1</h2>
+            <h2 className="text-xl font-bold text-ink-900">Rashi</h2>
             <p className="text-xs text-ink-400">Tracked independently from Shnayim Mikra</p>
           </div>
           <div className="flex items-center gap-2">
@@ -109,20 +123,21 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
             )}
           </div>
         </div>
+
         {savedRashiVerseId && !done && (
           <p className="mt-2 text-xs text-ink-400">
             Saved through{' '}
             <span className="font-medium text-ink-600">
-              {savedIndex >= 0 ? verses[savedIndex].hebrewRef : savedRashiVerseId}
+              {savedIndex >= 0 ? versesWithRashi[savedIndex].hebrewRef : savedRashiVerseId}
             </span>
           </p>
         )}
       </div>
 
-      {/* Rashi entries */}
+      {/* Rashi entries — only pesukim that have comments */}
       <div className="rounded-2xl border border-amber-100 bg-white px-5 py-8 shadow-sm sm:px-9">
         <div className="space-y-8">
-          {verses.map((verse, index) => {
+          {versesWithRashi.map((verse, index) => {
             const isCompleted = savedIndex >= 0 && index <= savedIndex && !done;
             const isActive = activeVerseId === verse.id;
 
@@ -142,17 +157,20 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
                 >
                   {verse.hebrewRef}
                 </a>
-                <div dir="rtl" className="space-y-3">
-                  {verse.rashi.map((note, i) => (
-                    <p
-                      key={i}
-                      className={`text-base leading-[1.95] tracking-wide text-ink-800 ${rashiScript ? 'font-rashi' : 'font-hebrew'}`}
-                    >
-                      {note}
+
+                <div dir="rtl" className="space-y-4">
+                  {verse.rashi.map((entry, i) => (
+                    <p key={i} className={`${bodyFont} text-base leading-[1.95] text-ink-800`}>
+                      {entry.dibburHamaschil && (
+                        // Dibur hamaschil: always square script, always bold
+                        <strong className="font-hebrew font-bold">{entry.dibburHamaschil}. </strong>
+                      )}
+                      {entry.text}
                     </p>
                   ))}
                 </div>
-                {index < verses.length - 1 && (
+
+                {index < versesWithRashi.length - 1 && (
                   <div className="mt-8 border-b border-amber-100" />
                 )}
               </div>
@@ -163,17 +181,14 @@ export function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, 
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-stretch gap-3 border-t border-amber-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-ink-400">
-            Reading:{' '}
-            <span className="font-medium text-ink-700">{activeVerse?.hebrewRef ?? '—'}</span>
+            Reading: <span className="font-medium text-ink-700">{activeVerse?.hebrewRef ?? '—'}</span>
           </p>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={handleSave}
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                justSaved
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-amber-600 text-white hover:bg-amber-700'
+                justSaved ? 'bg-green-100 text-green-700' : 'bg-amber-600 text-white hover:bg-amber-700'
               }`}
             >
               {justSaved ? '✓ Saved' : 'Save Rashi spot'}
