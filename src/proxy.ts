@@ -42,7 +42,8 @@ export async function proxy(request: NextRequest) {
 
   // Admins going to user routes → send to admin dashboard (unless "view as user" cookie set)
   const viewAsUser = request.cookies.get('shnayim-view-as-user')?.value === '1';
-  if (isAdmin && !viewAsUser && (pathname === '/' || pathname.startsWith('/parsha') || pathname.startsWith('/aliyah'))) {
+  const isReaderMode = profile?.preferredView === 'READER';
+  if (isAdmin && !viewAsUser && !isReaderMode && (pathname === '/' || pathname.startsWith('/parsha') || pathname.startsWith('/aliyah'))) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 
