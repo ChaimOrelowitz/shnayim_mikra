@@ -4,9 +4,22 @@ import { createClient } from '@/lib/supabase/server';
 import { AliyahView } from '@/components/AliyahView';
 import { ReaderClient } from './ReaderClient';
 import { currentHebrewYear } from '@/lib/hebcal';
-import { toHebrewNumeral } from '@/lib/language';
-
 export const dynamic = 'force-dynamic';
+
+function toHebrewNumeral(n: number): string {
+  if (n <= 0) return String(n);
+  const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+  const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+  const hundreds = ['', 'ק', 'ר', 'ש', 'ת', 'תק', 'תר', 'תש', 'תת', 'תתק'];
+  if (n === 15) return 'טו';
+  if (n === 16) return 'טז';
+  let result = '';
+  let rem = n;
+  if (rem >= 100) { result += hundreds[Math.floor(rem / 100)]; rem %= 100; }
+  if (rem >= 10)  { result += tens[Math.floor(rem / 10)];      rem %= 10; }
+  result += ones[rem];
+  return result;
+}
 
 interface AliyahPageProps {
   params: Promise<{ id: string }>;
