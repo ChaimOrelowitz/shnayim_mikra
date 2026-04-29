@@ -88,7 +88,7 @@ export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCard
       </div>
 
       {/* Body: toggles left, buttons right */}
-      <div className="flex items-stretch justify-between" style={{ minHeight: 52 }}>
+      <div className="flex items-start justify-between">
         {/* 2×2 toggle grid */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 content-center">
           {three.map(({ field, label, checked }) => (
@@ -121,17 +121,17 @@ export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCard
         </div>
 
         {/* Open + PDF stacked buttons */}
-        <div className={`grid gap-1 w-16 ${aliyah.pdfPath ? 'grid-rows-3' : 'grid-rows-1'}`}>
+        <div className="flex flex-col gap-1 w-16">
           <Link
             href={`/aliyah/${aliyah.id}?year=${hebrewYear}`}
-            className={`${aliyah.pdfPath ? 'row-span-2' : 'row-span-1'} bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold font-hebrew flex items-center justify-center transition-colors`}
+            className="h-8 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold font-hebrew flex items-center justify-center transition-colors"
           >
             Open
           </Link>
           {aliyah.pdfPath && (
             <button
               onClick={() => setShowPdf(true)}
-              className="row-span-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-[11px] font-semibold font-hebrew flex items-center justify-center transition-colors"
+              className="h-5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-[11px] font-semibold font-hebrew flex items-center justify-center transition-colors"
             >
               PDF
             </button>
