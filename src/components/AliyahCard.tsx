@@ -126,7 +126,7 @@ export function AliyahCard({ aliyah, parshaId, isAdmin, hebrewYear }: AliyahCard
             href={`/aliyah/${aliyah.id}?year=${hebrewYear}`}
             className="h-8 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold font-hebrew flex items-center justify-center transition-colors"
           >
-            Open
+            Read
           </Link>
           {aliyah.pdfPath && (
             <button
