@@ -65,7 +65,10 @@ export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(fu
   }, [nextResumeVerse]);
 
   const handleSave = useCallback(() => {
-    const id = activeVerseId ?? verses[0]?.id;
+    const activeIndex = verses.findIndex((v) => v.id === activeVerseId);
+    // Bookmark the pasuk before the one on screen — user is currently reading it, so they've finished the one before
+    const saveIndex = activeIndex > 0 ? activeIndex - 1 : 0;
+    const id = verses[saveIndex]?.id;
     if (!id) return;
     onSaveSpot(id);
     setJustSaved(true);
