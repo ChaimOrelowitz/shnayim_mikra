@@ -14,10 +14,9 @@ interface RashiReaderProps {
   done: boolean;
   onSaveRashiSpot: (verseId: string) => void;
   onMarkRashiDone: () => void;
-  sectionRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const RashiReader = forwardRef<RashiReaderHandle, RashiReaderProps>(function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, onMarkRashiDone, sectionRef }, ref) {
+export const RashiReader = forwardRef<RashiReaderHandle, RashiReaderProps>(function RashiReader({ verses, savedRashiVerseId, done, onSaveRashiSpot, onMarkRashiDone }, ref) {
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const [rashiScript, setRashiScript] = useState(false);
@@ -79,7 +78,7 @@ export const RashiReader = forwardRef<RashiReaderHandle, RashiReaderProps>(funct
   const bodyFont = rashiScript ? 'font-rashi' : 'font-hebrew';
 
   return (
-    <section ref={sectionRef} className="mx-auto w-full max-w-2xl pb-16 pt-8">
+    <section className="mx-auto w-full max-w-2xl pb-16 pt-2">
       {/* Header card */}
       <div className="mb-1 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5 shadow-sm sm:px-7">
         <div className="mb-3 flex items-center justify-between">
@@ -185,30 +184,15 @@ export const RashiReader = forwardRef<RashiReaderHandle, RashiReaderProps>(funct
           })}
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-stretch gap-3 border-t border-amber-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-ink-400">
-            Reading: <span className="font-medium text-ink-700">{activeVerse?.hebrewRef ?? '—'}</span>
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleSave}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                justSaved ? 'bg-green-100 text-green-700' : 'bg-amber-600 text-white hover:bg-amber-700'
-              }`}
-            >
-              {justSaved ? '✓ Saved' : 'Bookmark Rashi'}
-            </button>
-            <button
-              type="button"
-              onClick={onMarkRashiDone}
-              disabled={done}
-              className="rounded-full bg-parchment-100 px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-parchment-200 disabled:opacity-40"
-            >
-              {done ? '✓ Rashi done' : 'Mark Rashi done'}
-            </button>
-          </div>
+        <div className="mt-10 flex justify-end border-t border-amber-100 pt-6">
+          <button
+            type="button"
+            onClick={onMarkRashiDone}
+            disabled={done}
+            className="rounded-full bg-parchment-100 px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-parchment-200 disabled:opacity-40"
+          >
+            {done ? '✓ Rashi done' : 'Mark Rashi done'}
+          </button>
         </div>
       </div>
     </section>

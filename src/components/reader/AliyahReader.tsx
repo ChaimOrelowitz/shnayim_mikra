@@ -15,15 +15,12 @@ interface AliyahReaderProps {
   done: boolean;
   onSaveSpot: (verseId: string) => void;
   onMarkDone: () => void;
-  parshaName?: string;
-  aliyahNumber?: number;
 }
 
-export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDone, parshaName, aliyahNumber }, ref) {
+export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(function AliyahReader({ verses, savedVerseId, done, onSaveSpot, onMarkDone }, ref) {
   const [activeVerseId, setActiveVerseId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const verseRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -77,32 +74,30 @@ export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(fu
 
   useImperativeHandle(ref, () => ({ save: handleSave, justSaved }), [handleSave, justSaved]);
 
-  const activeVerse = verses.find((v) => v.id === activeVerseId);
-
   return (
-    <section className="mx-auto w-full max-w-2xl pb-32">
-      {/* Header card */}
-      <div className="mb-1 rounded-2xl border border-parchment-200 bg-white px-5 py-5 shadow-sm sm:px-7">
-        <p className="mb-1 text-[0.7rem] font-semibold uppercase tracking-widest text-blue-700">
-          שניים מקרא
-        </p>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="mx-auto w-full max-w-2xl pb-6">
+      {/* Info bar */}
+      <div className="mb-1 rounded-2xl border border-parchment-200 bg-white px-5 py-3 shadow-sm sm:px-7">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-ink-900 font-hebrew">
-              {parshaName ?? 'Bereishis'}{aliyahNumber != null ? ` · Aliyah ${aliyahNumber}` : ' · Aliyah 1'}
-            </h2>
-            <p className="text-xs text-ink-400 font-hebrew">
-              {verses[0]?.hebrewRef ?? ''}{verses.length > 1 ? ` – ${verses[verses.length - 1]?.hebrewRef}` : ''}
+            <p className="text-xs text-ink-500 font-hebrew">
+              {verses[0]?.hebrewRef ?? ''}
+              {verses.length > 1 ? ` – ${verses[verses.length - 1]?.hebrewRef}` : ''}
             </p>
+            {savedVerseId && !done && savedIndex >= 0 && (
+              <p className="text-[0.7rem] text-ink-400 mt-0.5">
+                Saved through <span className="font-medium text-ink-600">{verses[savedIndex].hebrewRef}</span>
+              </p>
+            )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {nextResumeVerse && (
               <button
                 type="button"
                 onClick={handleResume}
                 className="rounded-full border border-parchment-300 bg-parchment-50 px-3 py-1.5 text-xs font-medium text-ink-700 transition hover:bg-parchment-100"
               >
-                Resume at {nextResumeVerse.hebrewRef} ↓
+                Resume ↓
               </button>
             )}
             {done && (
@@ -112,19 +107,10 @@ export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(fu
             )}
           </div>
         </div>
-
-        {savedVerseId && !done && (
-          <p className="mt-2 text-xs text-ink-400">
-            Saved through{' '}
-            <span className="font-medium text-ink-600">
-              {savedIndex >= 0 ? verses[savedIndex].hebrewRef : savedVerseId}
-            </span>
-          </p>
-        )}
       </div>
 
       {/* Verse flow */}
-      <div ref={containerRef} className="rounded-2xl border border-parchment-200 bg-white px-5 py-8 shadow-sm sm:px-9">
+      <div className="rounded-2xl border border-parchment-200 bg-white px-5 py-8 shadow-sm sm:px-9">
         <div className="space-y-0">
           {verses.map((verse, index) => (
             <VerseUnit
@@ -137,37 +123,17 @@ export const AliyahReader = forwardRef<AliyahReaderHandle, AliyahReaderProps>(fu
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-stretch gap-3 border-t border-parchment-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-ink-400">
-            Reading:{' '}
-            <span className="font-medium text-ink-700">{activeVerse?.hebrewRef ?? '—'}</span>
-          </p>
-          <div className="flex gap-2">
-            {/* Desktop save button */}
-            <button
-              type="button"
-              onClick={handleSave}
-              className={`hidden rounded-full px-4 py-2 text-sm font-medium transition sm:inline-flex ${
-                justSaved
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-blue-700 text-white hover:bg-blue-800'
-              }`}
-            >
-              {justSaved ? '✓ Saved' : 'Bookmark Chumash'}
-            </button>
-            <button
-              type="button"
-              onClick={onMarkDone}
-              disabled={done}
-              className="rounded-full bg-parchment-100 px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-parchment-200 disabled:opacity-40"
-            >
-              {done ? '✓ Aliyah done' : 'Mark aliyah done'}
-            </button>
-          </div>
+        <div className="mt-10 flex justify-end border-t border-parchment-100 pt-6">
+          <button
+            type="button"
+            onClick={onMarkDone}
+            disabled={done}
+            className="rounded-full bg-parchment-100 px-4 py-2 text-sm font-medium text-ink-700 transition hover:bg-parchment-200 disabled:opacity-40"
+          >
+            {done ? '✓ Aliyah done' : 'Mark aliyah done'}
+          </button>
         </div>
       </div>
-
     </section>
   );
 });

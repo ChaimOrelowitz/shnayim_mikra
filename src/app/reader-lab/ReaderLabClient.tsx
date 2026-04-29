@@ -108,7 +108,7 @@ export function ReaderLabClient({ verses, parshaName, aliyahNumber }: Props) {
 
         <RashiReader
           ref={rashiRef}
-          sectionRef={rashiSectionRef}
+
           verses={verses}
           savedRashiVerseId={savedRashiVerseId}
           done={rashiDone}

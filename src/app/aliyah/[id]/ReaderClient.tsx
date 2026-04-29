@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { AliyahReader, type AliyahReaderHandle } from '@/components/reader/AliyahReader';
 import { RashiReader, type RashiReaderHandle } from '@/components/reader/RashiReader';
-import { FloatingSaveButton } from '@/components/reader/FloatingSaveButton';
 import { readerBookmarkChumash, updateAliyahProgress } from '@/app/actions';
 import type { VerseItem } from '@/lib/mock/bereishisAliyah1';
 
@@ -36,33 +35,48 @@ export function ReaderClient({
   const [aliyahDone, setAliyahDone] = useState(initialAliyahDone);
   const [rashiDone, setRashiDone] = useState(initialRashiDone);
   const [inRashiSection, setInRashiSection] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [, startTransition] = useTransition();
 
   const aliyahRef = useRef<AliyahReaderHandle>(null);
   const rashiRef = useRef<RashiReaderHandle>(null);
-  const rashiSectionRef = useRef<HTMLElement>(null);
+  const rashiSentinelRef = useRef<HTMLDivElement>(null);
+  const justSavedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Rashi position is localStorage-only (no per-pasuk Rashi field in DB yet)
   const rashiKey = `reader:rashiSpot:${aliyahId}`;
 
   useEffect(() => {
     setSavedRashiVerseId(localStorage.getItem(rashiKey));
   }, [rashiKey]);
 
+  // Switch header button between Chumash/Rashi once user scrolls past the sentinel
   useEffect(() => {
-    const el = rashiSectionRef.current;
+    const el = rashiSentinelRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setInRashiSection(entry.isIntersecting),
-      { threshold: 0.75 }
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+          setInRashiSection(true);
+        } else {
+          setInRashiSection(false);
+        }
+      },
+      { threshold: 0 }
     );
-    observer.observe(el);
-    return () => observer.disconnect();
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
+
+  function flash() {
+    setJustSaved(true);
+    clearTimeout(justSavedTimer.current);
+    justSavedTimer.current = setTimeout(() => setJustSaved(false), 1800);
+  }
 
   function saveAliyahSpot(verseId: string) {
     setSavedVerseId(verseId);
     setAliyahDone(false);
+    flash();
     startTransition(async () => {
       await readerBookmarkChumash(aliyahId, verseId, hebrewYear);
     });
@@ -72,6 +86,7 @@ export function ReaderClient({
     localStorage.setItem(rashiKey, verseId);
     setSavedRashiVerseId(verseId);
     setRashiDone(false);
+    flash();
   }
 
   function markAliyahDone() {
@@ -88,37 +103,50 @@ export function ReaderClient({
     });
   }
 
-  const handleFloatingPress = () => {
+  function handleHeaderSave() {
     if (inRashiSection) {
       rashiRef.current?.save();
     } else {
       aliyahRef.current?.save();
     }
-  };
-
-  const justSaved = inRashiSection
-    ? (rashiRef.current?.justSaved ?? false)
-    : (aliyahRef.current?.justSaved ?? false);
+  }
 
   const ALIYAH_HEB = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז'];
 
   return (
     <main className="min-h-screen bg-parchment-50">
-      <div className="sticky top-0 z-10 border-b border-parchment-200 bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-2xl items-center gap-3">
-          <Link href={`/parsha/${parshaId}?year=${hebrewYear}`} className="text-ink-400 hover:text-ink-700 transition-colors">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 border-b border-parchment-200 bg-white/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
+          <Link
+            href={`/parsha/${parshaId}?year=${hebrewYear}`}
+            className="shrink-0 text-ink-400 hover:text-ink-700 transition-colors"
+          >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <div className="flex-1 text-center">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-ink-400">שניים מקרא</p>
-            <h1 className="font-hebrew text-lg font-semibold text-ink-900">
+
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-ink-400">שניים מקרא</p>
+            <h1 className="font-hebrew text-base font-semibold text-ink-900 truncate leading-tight">
               {parshaName} · עליה {ALIYAH_HEB[aliyahNumber - 1] ?? String(aliyahNumber)}
             </h1>
           </div>
-          {/* spacer to balance the back arrow */}
-          <div className="w-5" />
+
+          <button
+            type="button"
+            onClick={handleHeaderSave}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 ${
+              justSaved
+                ? 'bg-green-100 text-green-700'
+                : inRashiSection
+                ? 'bg-amber-500 text-white hover:bg-amber-600'
+                : 'bg-blue-700 text-white hover:bg-blue-800'
+            }`}
+          >
+            {justSaved ? '✓ Saved' : inRashiSection ? 'Bookmark Rashi' : 'Bookmark'}
+          </button>
         </div>
       </div>
 
@@ -130,13 +158,13 @@ export function ReaderClient({
           done={aliyahDone}
           onSaveSpot={saveAliyahSpot}
           onMarkDone={markAliyahDone}
-          parshaName={parshaName}
-          aliyahNumber={aliyahNumber}
         />
+
+        {/* Sentinel: scrolling past this flips the header button to Rashi mode */}
+        <div ref={rashiSentinelRef} aria-hidden />
 
         <RashiReader
           ref={rashiRef}
-          sectionRef={rashiSectionRef}
           verses={verses}
           savedRashiVerseId={savedRashiVerseId}
           done={rashiDone}
@@ -144,13 +172,6 @@ export function ReaderClient({
           onMarkRashiDone={markRashiDone}
         />
       </div>
-
-      <FloatingSaveButton
-        label={justSaved ? '✓ Saved' : inRashiSection ? 'Bookmark Rashi' : 'Bookmark Chumash'}
-        saved={justSaved}
-        mode={inRashiSection ? 'rashi' : 'chumash'}
-        onClick={handleFloatingPress}
-      />
     </main>
   );
 }
