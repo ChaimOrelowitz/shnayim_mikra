@@ -26,7 +26,7 @@ export default async function AliyahPage({ params, searchParams }: AliyahPagePro
     ? await prisma.profile.findUnique({ where: { id: userId } })
     : null;
 
-  const useReaderView = profile?.role === 'ADMIN' && profile?.preferredView === 'READER';
+  const useReaderView = profile?.preferredView === 'READER';
 
   // ── Reader view ──────────────────────────────────────────────────────────────
   if (useReaderView) {

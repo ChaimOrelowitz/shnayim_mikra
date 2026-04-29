@@ -13,5 +13,5 @@ export default async function SettingsPage() {
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
   if (!profile) redirect('/login');
 
-  return <SettingsForm profile={{ ...profile, role: profile.role, preferredView: profile.preferredView }} backHref={profile.role === 'ADMIN' ? '/admin' : '/'} />;
+  return <SettingsForm profile={{ firstName: profile.firstName, lastName: profile.lastName, email: profile.email, location: profile.location, preferredView: profile.preferredView }} backHref={profile.role === 'ADMIN' ? '/admin' : '/'} />;
 }

@@ -9,7 +9,6 @@ interface Profile {
   lastName: string | null;
   email: string;
   location: 'EY' | 'CHUL';
-  role: 'ADMIN' | 'USER';
   preferredView: 'CLASSIC' | 'READER';
 }
 
@@ -26,7 +25,7 @@ export function SettingsForm({ profile, backHref }: { profile: Profile; backHref
     e.preventDefault();
     setSaved(false);
     startTransition(async () => {
-      await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), location, ...(profile.role === 'ADMIN' && { preferredView }) });
+      await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), location, preferredView });
       setSaved(true);
     });
   }
@@ -96,8 +95,7 @@ export function SettingsForm({ profile, backHref }: { profile: Profile; backHref
             </div>
           </div>
 
-          {profile.role === 'ADMIN' && (
-            <div>
+          <div>
               <label className="block text-sm font-medium text-ink-700 mb-2">Reader view</label>
               <p className="text-xs text-ink-400 mb-3">
                 Classic view shows the PDF. Reader view is an experimental scroll-based reader with Rashi.
@@ -119,7 +117,6 @@ export function SettingsForm({ profile, backHref }: { profile: Profile; backHref
                 ))}
               </div>
             </div>
-          )}
 
           <div className="flex items-center gap-3 pt-1">
             <button
