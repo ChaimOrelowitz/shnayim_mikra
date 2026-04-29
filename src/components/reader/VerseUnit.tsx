@@ -35,15 +35,15 @@ export function VerseUnit({ verse, isActive, isCompleted, containerRef }: VerseU
         {verse.mikra}
       </p>
 
-      {/* Second Mikra — same text, smaller and lighter */}
-      <p className="font-hebrew mt-2 text-lg leading-[1.9] tracking-wide text-ink-500">
+      {/* Second Mikra — same text, slightly smaller than first, black */}
+      <p className="font-hebrew mt-2 text-xl leading-[1.9] tracking-wide text-ink-900">
         {verse.mikra}
       </p>
 
-      {/* Targum — visually distinct: indented, different weight, warm tint */}
+      {/* Targum — visually distinct: indented, lighter grey */}
       <p
         dir="rtl"
-        className="mt-3 border-r-2 border-parchment-300 pr-4 font-hebrew text-base leading-[1.95] tracking-wide text-ink-600 italic-none"
+        className="mt-3 border-r-2 border-parchment-300 pr-4 font-hebrew text-lg leading-[1.95] tracking-wide text-ink-400 italic-none"
       >
         {verse.targum}
       </p>
