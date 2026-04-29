@@ -28,7 +28,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" dir="ltr">
-      <head />
+      <head>
+        <link
+          rel="preload"
+          href="/fonts/SBL_BLit.ttf"
+          as="font"
+          type="font/truetype"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className={poppins.variable}>
         <LanguageProvider>
           <NavWrapper />
