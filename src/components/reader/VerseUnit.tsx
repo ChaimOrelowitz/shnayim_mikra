@@ -43,7 +43,7 @@ export function VerseUnit({ verse, isActive, isCompleted, containerRef }: VerseU
       {/* Targum — visually distinct: indented, lighter grey */}
       <p
         dir="rtl"
-        className="mt-3 border-r-2 border-parchment-300 pr-4 font-hebrew text-lg leading-[1.95] tracking-wide text-ink-400 italic-none"
+        className="mt-3 border-r-2 border-blue-300 pr-4 font-hebrew text-lg leading-[1.95] tracking-wide text-blue-700 italic-none"
       >
         {verse.targum}
       </p>
