@@ -145,7 +145,7 @@ export function ReaderClient({
                 : 'bg-blue-700 text-white hover:bg-blue-800'
             }`}
           >
-            {justSaved ? '✓ Saved' : inRashiSection ? 'Bookmark Rashi' : 'Bookmark'}
+            {justSaved ? '✓ Saved' : inRashiSection ? 'Bookmark Rashi' : 'Bookmark Chumash'}
           </button>
         </div>
       </div>
