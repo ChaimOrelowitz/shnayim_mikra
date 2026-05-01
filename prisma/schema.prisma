@@ -37,7 +37,7 @@ model Profile {
   lastName      String?
   role          Role     @default(USER)
   location      Location @default(CHUL)
-  preferredView ViewMode @default(CLASSIC)
+  preferredView ViewMode @default(READER)
   createdAt     DateTime @default(now())
 
   aliyahProgress UserAliyahProgress[]
