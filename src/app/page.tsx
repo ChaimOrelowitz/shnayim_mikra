@@ -23,9 +23,24 @@ export default async function HomePage({
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
 
-  const profile = userId
+  let profile = userId
     ? await prisma.profile.findUnique({ where: { id: userId } })
     : null;
+
+  // Auto-create profile for self-signup users on first visit
+  if (userId && user && !profile) {
+    const meta = user.user_metadata ?? {};
+    profile = await prisma.profile.upsert({
+      where: { id: userId },
+      update: {},
+      create: {
+        id: userId,
+        email: user.email!,
+        firstName: meta.firstName ?? null,
+        lastName: meta.lastName ?? null,
+      },
+    });
+  }
 
   const location = profile?.location ?? 'CHUL';
 
