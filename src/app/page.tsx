@@ -1,95 +1,112 @@
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { ParshaList } from '@/components/ParshaList';
 import {
   getCurrentParsha,
   getScheduleForYear,
   currentHebrewYear,
   normalizeParsha,
 } from '@/lib/hebcal';
-import { HomePickerClient } from '@/components/HomePickerClient';
 
 export const dynamic = 'force-dynamic';
 
-// Day of week (0=Sun … 6=Sat) → aliyah index (0=כהן … 6=שביעי)
-function todaysAliyahIndex(): number {
-  return new Date().getDay(); // 0–6 maps directly
-}
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string }>;
+}) {
+  const params = await searchParams;
 
-export default async function HomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const userId = user?.id;
 
-  let profile = await prisma.profile.findUnique({ where: { id: user.id } });
-  if (!profile) {
+  let profile = userId
+    ? await prisma.profile.findUnique({ where: { id: userId } })
+    : null;
+
+  if (userId && user && !profile) {
+    const meta = user.user_metadata ?? {};
     profile = await prisma.profile.upsert({
-      where: { id: user.id },
+      where: { id: userId },
       update: {},
-      create: { id: user.id, email: user.email!, firstName: user.user_metadata?.firstName ?? null, lastName: user.user_metadata?.lastName ?? null },
+      create: {
+        id: userId,
+        email: user.email!,
+        firstName: meta.firstName ?? null,
+        lastName: meta.lastName ?? null,
+      },
     });
   }
 
-  const { cookies } = await import('next/headers');
+  const location = profile?.location ?? 'CHUL';
+
   const jar = await cookies();
-  const viewAsUser = jar.get('shnayim-view-as-user')?.value === '1';
-  if (profile.role === 'ADMIN' && !viewAsUser && profile.preferredView !== 'READER') {
+  const isViewingAsUser = jar.get('shnayim-view-as-user')?.value === '1';
+  const isReaderMode = profile?.preferredView === 'READER';
+
+  if (profile?.role === 'ADMIN' && !isViewingAsUser && !isReaderMode) {
     redirect('/admin');
   }
 
-  const location = profile.location ?? 'CHUL';
-  const hebrewYear = currentHebrewYear();
+  const thisYear = currentHebrewYear();
+  const hebrewYear = params.year ? parseInt(params.year, 10) : thisYear;
+  const availableYears = [thisYear - 1, thisYear, thisYear + 1];
 
-  // Get current parsha — if none (Yom Tov), find the next scheduled one
-  let currentParshaName = await getCurrentParsha(location);
+  const [schedule, currentParsha] = await Promise.all([
+    getScheduleForYear(hebrewYear, location),
+    getCurrentParsha(location),
+  ]);
 
-  if (!currentParshaName) {
-    // No parsha this week — find the next one from the schedule
-    const schedule = await getScheduleForYear(hebrewYear, location);
-    const today = new Date().toISOString().slice(0, 10);
-    // getScheduleForYear returns names in order; use hebcal calendar to find next date
-    // Fall back: just use the first parsha in this year's schedule
-    currentParshaName = schedule[0] ?? '';
-  }
+  const scheduledNorms = new Set(schedule.map(normalizeParsha));
 
-  // Load all parshiyot with aliyot
-  const parshiyot = await prisma.parsha.findMany({
+  const parshiyos = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },
     include: {
       aliyos: {
         orderBy: { number: 'asc' },
         include: {
           userProgress: {
-            where: { userId: user.id, hebrewYear },
+            where: userId ? { userId, hebrewYear } : { userId: '' },
           },
         },
       },
     },
   });
 
-  // Find current parsha record
-  const currentParsha = parshiyot.find(
-    (p) => p.englishName && normalizeParsha(p.englishName) === normalizeParsha(currentParshaName)
-  ) ?? parshiyot[0];
+  const currentNorm = normalizeParsha(currentParsha);
 
-  const parshaWithProgress = parshiyot.map((p) => ({
-    id: p.id,
-    name: p.name,
-    englishName: p.englishName ?? '',
-    order: p.order,
-    aliyos: p.aliyos.map((a) => ({
-      id: a.id,
-      number: a.number,
-      done: a.userProgress[0]?.done ?? false,
-    })),
-  }));
+  const parshiyosWithProgress = parshiyos
+    .filter((p) =>
+      scheduledNorms.size === 0 ||
+      (p.englishName && scheduledNorms.has(normalizeParsha(p.englishName)))
+    )
+    .map((p) => ({
+      ...p,
+      isCurrent:
+        !!currentNorm &&
+        !!p.englishName &&
+        normalizeParsha(p.englishName) === currentNorm,
+      aliyos: p.aliyos.map((a) => ({
+        ...a,
+        done: a.userProgress[0]?.done ?? false,
+        mikra1: a.userProgress[0]?.mikra1 ?? false,
+        mikra2: a.userProgress[0]?.mikra2 ?? false,
+        targum: a.userProgress[0]?.targum ?? false,
+        rashiReview: a.userProgress[0]?.rashiReview ?? false,
+      })),
+    }));
 
   return (
-    <HomePickerClient
-      parshiyot={parshaWithProgress}
-      initialParshaId={currentParsha.id}
-      initialAliyahIndex={todaysAliyahIndex()}
+    <ParshaList
+      parshiyos={parshiyosWithProgress}
+      isAdmin={profile?.role === 'ADMIN' && !isReaderMode}
+      location={location}
+      isViewingAsUser={isViewingAsUser}
       hebrewYear={hebrewYear}
+      availableYears={availableYears}
     />
   );
 }
