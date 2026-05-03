@@ -39,11 +39,12 @@ export default async function HomeBetaPage() {
   const location = profile.location ?? 'CHUL';
   const hebrewYear = currentHebrewYear();
 
-  let currentParshaName = await getCurrentParsha(location);
-  if (!currentParshaName) {
-    const schedule = await getScheduleForYear(hebrewYear, location);
-    currentParshaName = schedule[0] ?? '';
-  }
+  const [schedule, currentParshaName_] = await Promise.all([
+    getScheduleForYear(hebrewYear, location),
+    getCurrentParsha(location),
+  ]);
+  const currentParshaName = currentParshaName_ || schedule[0] || '';
+  const scheduledNorms = new Set(schedule.map(normalizeParsha));
 
   const parshiyot = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },
@@ -59,11 +60,15 @@ export default async function HomeBetaPage() {
     },
   });
 
-  const currentParsha = parshiyot.find(
-    (p) => p.englishName && normalizeParsha(p.englishName) === normalizeParsha(currentParshaName)
-  ) ?? parshiyot[0];
+  const filteredParshiyot = parshiyot.filter(
+    (p) => scheduledNorms.size === 0 || (p.englishName && scheduledNorms.has(normalizeParsha(p.englishName)))
+  );
 
-  const parshaWithProgress = parshiyot.map((p) => ({
+  const currentParsha = filteredParshiyot.find(
+    (p) => p.englishName && normalizeParsha(p.englishName) === normalizeParsha(currentParshaName)
+  ) ?? filteredParshiyot[0];
+
+  const parshaWithProgress = filteredParshiyot.map((p) => ({
     id: p.id,
     name: p.name,
     englishName: p.englishName ?? '',
