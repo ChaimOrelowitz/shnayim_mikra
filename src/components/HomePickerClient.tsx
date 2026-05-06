@@ -65,7 +65,7 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
   };
 
   return (
-    <div className="flex flex-col" style={{ height: '100dvh', overflow: 'hidden', background: DARK }}>
+    <div className="flex flex-col" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: DARK }}>
 
       {/* Header */}
       <div className="flex-shrink-0 px-5 pt-6 pb-4 flex items-center justify-center" style={{ background: DARK }}>
