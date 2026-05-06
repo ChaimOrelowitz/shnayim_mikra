@@ -75,7 +75,7 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
       </div>
 
       {/* Card */}
-      <div className="flex-1 flex flex-col pb-24 pt-6 px-5" style={{ background: CREAM, borderRadius: '20px 20px 0 0', border: `1px solid ${BORDER}`, borderBottom: 'none' }}>
+      <div className="flex-1 flex flex-col pb-6 pt-6 px-5 mx-4 mb-4" style={{ background: CREAM, borderRadius: '20px', border: `1px solid ${BORDER}` }}>
 
         <SliderRow
           label="Sefer"
