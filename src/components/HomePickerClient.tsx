@@ -52,16 +52,16 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
     setChecked(prev => { const next = [...prev]; next[i] = !next[i]; return next; });
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 pb-24" style={{ background: '#0a1628' }}>
-      {/* Top bar */}
-      <div className="w-full max-w-[440px] px-5 py-3.5 flex items-center justify-center" style={{ background: '#1e3a8a', borderRadius: '20px 20px 0 0' }}>
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Header */}
+      <div className="w-full px-5 py-4 flex items-center justify-center" style={{ background: '#1e3a8a' }}>
         <span className="font-hebrew text-lg font-bold text-white" style={{ direction: 'rtl' }}>שניים מקרא</span>
       </div>
 
-      {/* Card */}
-      <div className="w-full max-w-[440px] bg-white flex flex-col" style={{ borderRadius: '0 0 24px 24px', paddingTop: '28px', paddingBottom: '28px' }}>
+      {/* Content */}
+      <div className="flex-1 flex flex-col justify-center px-5 pb-20" style={{ gap: '0' }}>
 
-        <div className="px-5 mb-[18px]">
+        <div className="mb-[18px]">
           <SliderRow
             label="Sefer"
             items={SEFARIM.map(s => ({ he: s.he, en: s.en }))}
@@ -75,7 +75,7 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
           />
         </div>
 
-        <div className="px-5 mb-[18px]">
+        <div className="mb-[18px]">
           <SliderRow
             label="Parsha"
             items={parshotInSefer.map(p => ({ he: p.name, en: p.englishName }))}
@@ -88,7 +88,7 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
           />
         </div>
 
-        <div className="px-5 mb-[18px]">
+        <div className="mb-[18px]">
           <SliderRow
             label="Aliyah"
             items={ALIYOT_HE.map(he => ({ he, en: '' }))}
@@ -100,15 +100,15 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
           />
         </div>
 
-        <div className="mx-5 mb-4" style={{ height: '1px', background: '#f0e8d8', marginTop: '4px' }} />
+        <div className="mb-4" style={{ height: '1px', background: '#f0e8d8', marginTop: '4px' }} />
 
-        <div className="text-center font-hebrew px-5 mb-[14px]" style={{ fontSize: '15px', color: '#475569', direction: 'rtl', minHeight: '20px' }}>
+        <div className="text-center font-hebrew mb-[14px]" style={{ fontSize: '15px', color: '#475569', direction: 'rtl', minHeight: '20px' }}>
           {currentParsha.name}&nbsp;&nbsp;·&nbsp;&nbsp;{ALIYOT_HE[aliyahIdx]}
         </div>
 
         <button
           onClick={handleGo}
-          className="mx-5 flex items-center justify-center gap-2 font-bold text-sm tracking-wider text-white transition-transform active:scale-[.98]"
+          className="flex items-center justify-center gap-2 font-bold text-sm tracking-wider text-white transition-transform active:scale-[.98]"
           style={{ height: '52px', background: '#1e3a8a', borderRadius: '13px', border: 'none', cursor: 'pointer' }}
           onMouseEnter={e => (e.currentTarget.style.background = '#1e40af')}
           onMouseLeave={e => (e.currentTarget.style.background = '#1e3a8a')}
