@@ -18,13 +18,13 @@ const SEFARIM = [
 ];
 
 const ALIYOT = [
-  { he: 'כֹּהֵן',    en: 'Kohen'    },
-  { he: 'לֵוִי',     en: 'Levi'     },
-  { he: 'שְׁלִישִׁי', en: 'Shlishi'  },
-  { he: 'רְבִיעִי',  en: "Revi'i"   },
-  { he: 'חֲמִישִׁי', en: 'Chamishi' },
-  { he: 'שִׁשִּׁי',  en: 'Shishi'   },
-  { he: 'שְׁבִיעִי', en: "Shvi'i"   },
+  { he: 'כֹּהֵן',    en: '' },
+  { he: 'לֵוִי',     en: '' },
+  { he: 'שְׁלִישִׁי', en: '' },
+  { he: 'רְבִיעִי',  en: '' },
+  { he: 'חֲמִישִׁי', en: '' },
+  { he: 'שִׁשִּׁי',  en: '' },
+  { he: 'שְׁבִיעִי', en: '' },
 ];
 
 interface Aliyah { id: string; number: number; done: boolean; }
@@ -46,9 +46,17 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
   const [seferIdx,  setSeferIdx]  = useState(Math.max(0, initSefer));
   const [parshaId,  setParshaId]  = useState(initParsha.id);
   const [aliyahIdx, setAliyahIdx] = useState(initialAliyahIndex);
+  const [checked,   setChecked]   = useState<boolean[]>(() => initParsha.aliyos.map(a => a.done));
 
   const currentParsha  = parshiyot.find(p => p.id === parshaId) ?? parshiyot[0];
   const parshotInSefer = parshiyot.filter(p => p.order >= SEFARIM[seferIdx].minOrder && p.order <= SEFARIM[seferIdx].maxOrder);
+
+  useEffect(() => {
+    setChecked(currentParsha.aliyos.map(a => a.done));
+  }, [parshaId]);
+
+  const toggleDot = (i: number) =>
+    setChecked(prev => { const next = [...prev]; next[i] = !next[i]; return next; });
 
   const handleGo = () => {
     const aliyah = currentParsha.aliyos[aliyahIdx];
@@ -102,6 +110,8 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
           selectedIdx={aliyahIdx}
           itemW={88}
           onSelect={idx => setAliyahIdx(idx)}
+          checked={checked}
+          onDotClick={toggleDot}
         />
 
         {/* Ornamental divider */}
@@ -113,7 +123,7 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
 
         {/* Summary */}
         <div className="text-center font-hebrew mb-5" style={{ fontSize: '16px', color: '#3a2e1e', direction: 'rtl' }}>
-          {SEFARIM[seferIdx].en}&nbsp;&nbsp;•&nbsp;&nbsp;{currentParsha.name}&nbsp;&nbsp;•&nbsp;&nbsp;{ALIYOT[aliyahIdx].he}
+          {currentParsha.name}&nbsp;&nbsp;•&nbsp;&nbsp;{ALIYOT[aliyahIdx].he}
         </div>
 
         {/* GO button */}
@@ -206,12 +216,14 @@ function BottomNav() {
 // ── Slider sub-component ──────────────────────────────────────────────────────
 interface SliderItem { he: string; en: string; }
 
-function SliderRow({ label, items, selectedIdx, itemW, onSelect }: {
+function SliderRow({ label, items, selectedIdx, itemW, onSelect, checked, onDotClick }: {
   label: string;
   items: SliderItem[];
   selectedIdx: number;
   itemW: number;
   onSelect: (idx: number) => void;
+  checked?: boolean[];
+  onDotClick?: (i: number) => void;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -317,9 +329,16 @@ function SliderRow({ label, items, selectedIdx, itemW, onSelect }: {
       onSelect(idx);
     };
 
-    const onMouseDown = (e: MouseEvent) => { e.preventDefault(); begin(e.clientX); };
+    const onMouseDown = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('[data-dot]')) return;
+      e.preventDefault();
+      begin(e.clientX);
+    };
     const onMouseMove = (e: MouseEvent) => move(e.clientX);
-    const onTouchStart = (e: TouchEvent) => begin(e.touches[0].clientX);
+    const onTouchStart = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).closest('[data-dot]')) return;
+      begin(e.touches[0].clientX);
+    };
     const onTouchMove  = (e: TouchEvent) => move(e.touches[0].clientX);
 
     outer.addEventListener('mousedown', onMouseDown);
@@ -364,7 +383,20 @@ function SliderRow({ label, items, selectedIdx, itemW, onSelect }: {
               style={{ left: `${itemPos(i)}px`, width: `${itemW}px`, gap: '3px' }}
             >
               <span className="he font-hebrew font-bold leading-tight whitespace-nowrap" style={{ fontSize: '22px' }}>{item.he}</span>
-              <span className="font-semibold uppercase whitespace-nowrap" style={{ fontSize: '8px', color: '#a89060', letterSpacing: '0.1em' }}>{item.en}</span>
+              {item.en ? (
+                <span className="font-semibold uppercase whitespace-nowrap" style={{ fontSize: '8px', color: '#a89060', letterSpacing: '0.1em' }}>{item.en}</span>
+              ) : (
+                <button
+                  data-dot=""
+                  onClick={e => { e.stopPropagation(); onDotClick?.(i); }}
+                  style={{
+                    width: '14px', height: '14px', borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
+                    border: checked?.[i] ? `1.5px solid ${GOLD}` : '1.5px solid #c4b49a',
+                    background: checked?.[i] ? GOLD : 'white',
+                    transition: 'background .15s, border-color .15s',
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>
