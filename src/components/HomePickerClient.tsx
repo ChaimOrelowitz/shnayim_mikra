@@ -65,18 +65,20 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: DARK }}>
+    <div className="flex flex-col" style={{ height: '100dvh', overflow: 'hidden', background: DARK }}>
 
       {/* Header */}
-      <div className="px-5 pt-6 pb-4 flex items-center justify-center" style={{ background: DARK }}>
+      <div className="flex-shrink-0 px-5 pt-6 pb-4 flex items-center justify-center" style={{ background: DARK }}>
         <span className="font-hebrew font-bold text-center" style={{ fontSize: '34px', color: GOLD, direction: 'rtl', letterSpacing: '0.02em' }}>
           שניים מקרא
         </span>
       </div>
 
-      {/* Card */}
-      <div className="flex-1 flex flex-col pb-6 pt-6 px-5 mx-4 mb-4" style={{ background: CREAM, borderRadius: '20px', border: `1px solid ${BORDER}` }}>
+      {/* Card — fills space between header and bottom nav */}
+      <div className="flex-1 min-h-0 px-4 pb-4" style={{ paddingBottom: '80px' }}>
+      <div className="h-full flex flex-col py-5 px-5" style={{ background: CREAM, borderRadius: '20px', border: `1px solid ${BORDER}` }}>
 
+        <div className="flex flex-col justify-between h-full">
         <SliderRow
           label="Sefer"
           items={SEFARIM.map(s => ({ he: s.he, en: s.en }))}
@@ -89,7 +91,6 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
           }}
         />
 
-        <div className="my-4" />
 
         <SliderRow
           label="Parsha"
@@ -102,7 +103,6 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
           }}
         />
 
-        <div className="my-4" />
 
         <SliderRow
           label="Aliyah"
@@ -115,14 +115,14 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
         />
 
         {/* Ornamental divider */}
-        <div className="flex items-center gap-3 my-5">
+        <div className="flex items-center gap-3">
           <div className="flex-1 h-px" style={{ background: BORDER }} />
           <span style={{ color: GOLD, fontSize: '14px' }}>✦</span>
           <div className="flex-1 h-px" style={{ background: BORDER }} />
         </div>
 
         {/* Summary */}
-        <div className="text-center font-hebrew mb-5" style={{ fontSize: '16px', color: '#3a2e1e', direction: 'rtl' }}>
+        <div className="text-center font-hebrew" style={{ fontSize: '16px', color: '#3a2e1e', direction: 'rtl' }}>
           {currentParsha.name}&nbsp;&nbsp;•&nbsp;&nbsp;{ALIYOT[aliyahIdx].he}
         </div>
 
@@ -135,6 +135,8 @@ export function HomePickerClient({ parshiyot, initialParshaId, initialAliyahInde
           GO
           <span style={{ fontSize: '18px', color: GOLD }}>›</span>
         </button>
+        </div>
+      </div>
       </div>
 
       <BottomNav />
