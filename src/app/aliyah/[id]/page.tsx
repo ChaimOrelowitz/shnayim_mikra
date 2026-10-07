@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { AliyahView } from '@/components/AliyahView';
 import { ReaderClient } from './ReaderClient';
-import { currentHebrewYear } from '@/lib/hebcal';
+import { currentCycleStartYear } from '@/lib/hebcal';
 export const dynamic = 'force-dynamic';
 
 function toHebrewNumeral(n: number): string {
@@ -29,7 +29,6 @@ interface AliyahPageProps {
 export default async function AliyahPage({ params, searchParams }: AliyahPageProps) {
   const { id } = await params;
   const { year } = await searchParams;
-  const hebrewYear = year ? parseInt(year, 10) : currentHebrewYear();
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -38,6 +37,9 @@ export default async function AliyahPage({ params, searchParams }: AliyahPagePro
   const profile = userId
     ? await prisma.profile.findUnique({ where: { id: userId } })
     : null;
+
+  // `hebrewYear` is the Torah cycle's start year (5786 = 5786/7)
+  const hebrewYear = year ? parseInt(year, 10) : currentCycleStartYear(profile?.location ?? 'CHUL');
 
   const useReaderView = profile?.preferredView === 'READER';
 

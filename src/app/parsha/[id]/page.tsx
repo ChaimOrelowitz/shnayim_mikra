@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { ParshaPageContent } from '@/components/ParshaPageContent';
-import { currentHebrewYear } from '@/lib/hebcal';
+import { currentCycleStartYear } from '@/lib/hebcal';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,11 +14,17 @@ interface ParshaPageProps {
 export default async function ParshaPage({ params, searchParams }: ParshaPageProps) {
   const { id } = await params;
   const { year } = await searchParams;
-  const hebrewYear = year ? parseInt(year, 10) : currentHebrewYear();
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
+
+  const profile = userId
+    ? await prisma.profile.findUnique({ where: { id: userId } })
+    : null;
+
+  // `hebrewYear` is the Torah cycle's start year (5786 = 5786/7)
+  const hebrewYear = year ? parseInt(year, 10) : currentCycleStartYear(profile?.location ?? 'CHUL');
 
   const parsha = await prisma.parsha.findUnique({
     where: { id },
@@ -35,10 +41,6 @@ export default async function ParshaPage({ params, searchParams }: ParshaPagePro
   });
 
   if (!parsha) notFound();
-
-  const profile = userId
-    ? await prisma.profile.findUnique({ where: { id: userId } })
-    : null;
 
   const parshaWithProgress = {
     ...parsha,

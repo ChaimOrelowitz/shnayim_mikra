@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/language';
 import { AliyahCard } from './AliyahCard';
 import { markParshaComplete, exitUserMode } from '@/app/actions';
-import { hebrewYearLabel } from '@/lib/hebcal';
+import { cycleDisplayName } from '@/lib/hebcal';
 
 // Royal progression: deep indigo → navy → royal blue → teal → emerald
 const SEFARIM = [
@@ -128,7 +128,7 @@ export function ParshaList({
                 className="text-xs border border-parchment-300 rounded-full px-2.5 py-1 bg-white text-ink-700 focus:outline-none focus:ring-1 focus:ring-sage-400"
               >
                 {availableYears.map((y) => (
-                  <option key={y} value={y}>{hebrewYearLabel(y)}</option>
+                  <option key={y} value={y}>{cycleDisplayName(y)}</option>
                 ))}
               </select>
             </div>
@@ -239,7 +239,7 @@ export function ParshaList({
             <h1 className="text-2xl font-bold text-ink-900 font-hebrew">
               {isHe ? selectedSefer.nameHe : selectedSefer.nameEn}
             </h1>
-            <span className="ml-auto text-xs text-ink-400">{hebrewYearLabel(hebrewYear)}</span>
+            <span className="ml-auto text-xs text-ink-400">{cycleDisplayName(hebrewYear)}</span>
           </div>
         </div>
       </header>

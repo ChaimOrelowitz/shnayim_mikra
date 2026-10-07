@@ -5,9 +5,10 @@ import { redirect } from 'next/navigation';
 import { ParshaList } from '@/components/ParshaList';
 import {
   getCurrentParsha,
-  getScheduleForYear,
-  currentHebrewYear,
-  normalizeParsha,
+  getCycleSchedule,
+  currentCycleStartYear,
+  parshaOrderForName,
+  SUPPORTED_CYCLES,
 } from '@/lib/hebcal';
 
 export const dynamic = 'force-dynamic';
@@ -51,16 +52,18 @@ export default async function HomePage({
     redirect('/admin');
   }
 
-  const thisYear = currentHebrewYear();
-  const hebrewYear = params.year ? parseInt(params.year, 10) : thisYear;
-  const availableYears = [thisYear - 1, thisYear, thisYear + 1];
+  // Cycle selector: `hebrewYear` is the cycle's starting Hebrew year (5786 = 5786/7)
+  const thisCycle = currentCycleStartYear(location);
+  const hebrewYear = params.year ? parseInt(params.year, 10) : thisCycle;
+  const availableYears = SUPPORTED_CYCLES;
 
+  // Selected cycle's schedule; the current-week parsha always comes from this week's Shabbat
   const [schedule, currentParsha] = await Promise.all([
-    getScheduleForYear(hebrewYear, location),
+    getCycleSchedule(hebrewYear, location),
     getCurrentParsha(location),
   ]);
 
-  const scheduledNorms = new Set(schedule.map(normalizeParsha));
+  const scheduledOrders = new Set(schedule.map((r) => r.order));
 
   const parshiyos = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },
@@ -76,19 +79,14 @@ export default async function HomePage({
     },
   });
 
-  const currentNorm = normalizeParsha(currentParsha);
+  const currentOrder = currentParsha ? parshaOrderForName(currentParsha) : undefined;
 
   const parshiyosWithProgress = parshiyos
-    .filter((p) =>
-      scheduledNorms.size === 0 ||
-      (p.englishName && scheduledNorms.has(normalizeParsha(p.englishName)))
-    )
+    .filter((p) => scheduledOrders.size === 0 || scheduledOrders.has(p.order))
     .map((p) => ({
       ...p,
-      isCurrent:
-        !!currentNorm &&
-        !!p.englishName &&
-        normalizeParsha(p.englishName) === currentNorm,
+      // Only within the current cycle, so browsing another cycle doesn't mark a parsha current
+      isCurrent: hebrewYear === thisCycle && currentOrder !== undefined && p.order === currentOrder,
       aliyos: p.aliyos.map((a) => ({
         ...a,
         done: a.userProgress[0]?.done ?? false,

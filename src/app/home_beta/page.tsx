@@ -4,9 +4,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import {
   getCurrentParsha,
-  getScheduleForYear,
-  currentHebrewYear,
-  normalizeParsha,
+  getCycleSchedule,
+  currentCycleStartYear,
+  parshaOrderForName,
 } from '@/lib/hebcal';
 import { HomePickerClient } from '@/components/HomePickerClient';
 
@@ -37,14 +37,16 @@ export default async function HomeBetaPage() {
   }
 
   const location = profile.location ?? 'CHUL';
-  const hebrewYear = currentHebrewYear();
+  // Always the current cycle; progress is stored under its start year
+  const hebrewYear = currentCycleStartYear(location);
 
   const [schedule, currentParshaName_] = await Promise.all([
-    getScheduleForYear(hebrewYear, location),
+    getCycleSchedule(hebrewYear, location),
     getCurrentParsha(location),
   ]);
-  const currentParshaName = currentParshaName_ || schedule[0] || '';
-  const scheduledNorms = new Set(schedule.map(normalizeParsha));
+  const currentParshaName = currentParshaName_ || schedule[0]?.name || '';
+  const currentOrder = parshaOrderForName(currentParshaName);
+  const scheduledOrders = new Set(schedule.map((r) => r.order));
 
   const parshiyot = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },
@@ -61,11 +63,11 @@ export default async function HomeBetaPage() {
   });
 
   const filteredParshiyot = parshiyot.filter(
-    (p) => scheduledNorms.size === 0 || (p.englishName && scheduledNorms.has(normalizeParsha(p.englishName)))
+    (p) => scheduledOrders.size === 0 || scheduledOrders.has(p.order)
   );
 
   const currentParsha = filteredParshiyot.find(
-    (p) => p.englishName && normalizeParsha(p.englishName) === normalizeParsha(currentParshaName)
+    (p) => p.order === currentOrder
   ) ?? filteredParshiyot[0];
 
   const parshaWithProgress = filteredParshiyot.map((p) => ({

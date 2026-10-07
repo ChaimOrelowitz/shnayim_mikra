@@ -54,11 +54,14 @@ Stored in `.env.local` (not committed). Keys needed:
 - `/admin` — Admin panel (upload content, manage users)
 - `/login` — Auth page
 
-## Hebrew calendar
-- `getCurrentParsha(location)` — returns this week's parsha name, empty string on Yom Tov weeks
-- `getScheduleForYear(year, location)` — returns ordered list of parsha names for a Hebrew year
-- `currentHebrewYear()` — returns current Hebrew year number
-- Location affects schedule: Israel (EY) sometimes reads different parshiyot than diaspora (CHUL)
+## Hebrew calendar / Torah cycles (`src/lib/hebcal.ts`)
+- A cycle is keyed by its STARTING Hebrew year: cycle 5786 = "5786/7" = Bereishit (5786) through Vezot HaBracha (Simchat Torah 5787). Progress `hebrewYear` stores this start year.
+- The cycle switches at Simchat Torah: Tishrei 23 in the diaspora (CHUL), Tishrei 22 in Israel (EY)
+- `currentCycleStartYear(location)`, `cycleDisplayName(startYear)`, `cycleDateWindow(startYear, location)`, `SUPPORTED_CYCLES`
+- `getCycleSchedule(startYear, location)` — Hebcal weekly readings between the two Simchat Torahs, with Vezot HaBracha appended (Hebcal doesn't list it)
+- `parshaOrderForName(name)` — maps Hebcal/corpus names (incl. combined readings like "Nitzavim-Vayeilech") to the corpus `Parsha.order` (1–54, combined = x.5)
+- `getCurrentParsha(location)` — this week's parsha from Hebcal's Shabbat API, empty string on Yom Tov weeks
+- Combined readings are separate `Parsha` rows (order x.5, type COMBINED) with their own aliyot and copied pesukim
 
 ## Key components
 - `HomePickerClient` — The new home_beta UI. RTL horizontal sliders (Sefer/Parsha/Aliyah), gold/dark theme, done circles on aliyot, GO button navigates to reader. Lives at `src/components/HomePickerClient.tsx`
