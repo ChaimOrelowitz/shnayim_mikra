@@ -5,6 +5,6 @@ import { TopNav } from './TopNav';
 
 export function NavWrapper() {
   const pathname = usePathname();
-  if (pathname === '/login' || pathname === '/home_beta') return null;
+  if (['/', '/privacy', '/support', '/login', '/home_beta'].includes(pathname)) return null;
   return <TopNav />;
 }

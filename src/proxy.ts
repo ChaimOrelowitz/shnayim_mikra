@@ -26,7 +26,12 @@ export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     if (pathname === '/login') {
-      if (user) return NextResponse.redirect(new URL('/', request.url));
+      if (user) return NextResponse.redirect(new URL('/app', request.url));
+      return supabaseResponse;
+    }
+
+    // Public website pages, plus the auth callback (it must run before a session exists)
+    if (['/', '/privacy', '/support', '/auth/callback'].includes(pathname)) {
       return supabaseResponse;
     }
 

@@ -11,7 +11,7 @@ export default function NotFound() {
         <p className="text-ink-600 mb-8">
           The page you&apos;re looking for doesn&apos;t exist.
         </p>
-        <Link href="/" className="btn btn-primary">
+        <Link href="/app" className="btn btn-primary">
           Return Home
         </Link>
       </div>

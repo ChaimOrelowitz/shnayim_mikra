@@ -12,7 +12,7 @@ export default async function AdminPage() {
   if (!user) redirect('/login');
 
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
-  if (profile?.role !== 'ADMIN') redirect('/');
+  if (profile?.role !== 'ADMIN') redirect('/app');
 
   const users = await prisma.profile.findMany({
     orderBy: { createdAt: 'asc' },

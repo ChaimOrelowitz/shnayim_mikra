@@ -11,7 +11,7 @@ export default async function AdminUploadPage() {
   if (!user) redirect('/login');
 
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
-  if (profile?.role !== 'ADMIN') redirect('/');
+  if (profile?.role !== 'ADMIN') redirect('/app');
 
   const parshiyos = await prisma.parsha.findMany({
     orderBy: { order: 'asc' },

@@ -86,7 +86,7 @@ export function ParshaList({
 
   function changeYear(y: number) {
     setSelectedSefer(null);
-    router.push(`/?year=${y}`);
+    router.push(`/app?year=${y}`);
   }
 
   const adminBanner = isViewingAsUser ? (

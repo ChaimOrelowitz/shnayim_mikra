@@ -19,5 +19,5 @@ export default async function SettingsPage() {
     });
   }
 
-  return <SettingsForm profile={{ firstName: profile.firstName, lastName: profile.lastName, email: profile.email, location: profile.location, preferredView: profile.preferredView }} backHref={profile.role === 'ADMIN' ? '/admin' : '/'} />;
+  return <SettingsForm profile={{ firstName: profile.firstName, lastName: profile.lastName, email: profile.email, location: profile.location, preferredView: profile.preferredView }} backHref={profile.role === 'ADMIN' ? '/admin' : '/app'} />;
 }

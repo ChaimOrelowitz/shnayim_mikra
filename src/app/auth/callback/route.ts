@@ -26,5 +26,5 @@ export async function GET(request: NextRequest) {
   }
 
   // After accepting invite or confirming email → send to app
-  return NextResponse.redirect(`${origin}/`);
+  return NextResponse.redirect(`${origin}/app`);
 }

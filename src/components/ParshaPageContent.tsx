@@ -34,7 +34,7 @@ export function ParshaPageContent({ parsha, isAdmin, hebrewYear }: ParshaPageCon
       <header className="border-b border-parchment-300 bg-white/80 backdrop-blur-sm sticky top-14 z-10">
         <div className="page-container">
           <div className="flex items-center gap-4 py-6">
-            <Link href={`/?year=${hebrewYear}`} className="text-sage-600 hover:text-sage-700" aria-label="Back to home">
+            <Link href={`/app?year=${hebrewYear}`} className="text-sage-600 hover:text-sage-700" aria-label="Back to home">
               <svg className="w-6 h-6 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>

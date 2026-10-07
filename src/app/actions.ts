@@ -99,7 +99,7 @@ export async function updateProfile(data: {
     where: { id: user.id },
     data,
   });
-  revalidatePath('/');
+  revalidatePath('/app');
   revalidatePath('/settings');
 }
 
@@ -111,7 +111,7 @@ export async function setViewAsUser(on: boolean) {
   } else {
     jar.delete('shnayim-view-as-user');
   }
-  redirect(on ? '/' : '/admin');
+  redirect(on ? '/app' : '/admin');
 }
 
 export async function exitUserMode() {
@@ -158,7 +158,7 @@ export async function updateAliyahProgress(
       update: { rashiReview: value },
       create: { userId, aliyahId, hebrewYear, rashiReview: value },
     });
-    revalidatePath('/');
+    revalidatePath('/app');
     revalidatePath('/parsha/[id]', 'page');
     return;
   }
@@ -203,7 +203,7 @@ export async function updateAliyahProgress(
     });
   }
 
-  revalidatePath('/');
+  revalidatePath('/app');
   revalidatePath('/parsha/[id]', 'page');
   revalidatePath('/aliyah/[id]', 'page');
 }
@@ -240,7 +240,7 @@ export async function markParshaComplete(parshaId: string, done: boolean, hebrew
 
   await prisma.$transaction([...aliyahOps, ...pasukOps]);
 
-  revalidatePath('/');
+  revalidatePath('/app');
   revalidatePath('/parsha/[id]', 'page');
 }
 
@@ -328,7 +328,7 @@ export async function readerBookmarkChumash(
     await prisma.$transaction(pasukOps);
   }
 
-  revalidatePath('/');
+  revalidatePath('/app');
   revalidatePath('/parsha/[id]', 'page');
   revalidatePath('/aliyah/[id]', 'page');
 }
