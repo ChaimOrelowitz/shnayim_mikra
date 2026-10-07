@@ -1,0 +1,89 @@
+/* ── Scroll reveal (see ScrollReveal.tsx) ─────────────────────────────── */
+:global(html[data-reveal-ready]) .reveal:not([data-revealed]) {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+.reveal {
+  transition:
+    opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--delay, 0s);
+}
+
+/* ── Hero entrance ────────────────────────────────────────────────────── */
+.enter {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: enter 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes enter {
+  to { opacity: 1; transform: none; }
+}
+
+/* Very slow drift on product imagery */
+.float {
+  animation: float 9s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Gentle parallax where scroll-driven animations are supported */
+@supports (animation-timeline: view()) {
+  .parallax {
+    animation: parallax linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+  @keyframes parallax {
+    from { transform: translateY(36px); }
+    to { transform: translateY(-36px); }
+  }
+}
+
+/* ── Links ────────────────────────────────────────────────────────────── */
+.arrowLink .arrow {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.arrowLink:hover .arrow,
+.arrowLink:focus-visible .arrow {
+  transform: translateX(5px);
+}
+
+.underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 0.2em;
+  transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.arrowLink:hover .underline,
+.arrowLink:focus-visible .underline {
+  background-size: 100% 1px;
+}
+
+.badge {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+}
+
+a.badge:hover {
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .enter, .float, .parallax, .badge, .arrowLink .arrow, .underline {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
