@@ -1,0 +1,35 @@
+.page {
+  min-height: 100vh;
+}
+
+/* Smooth in-page jumps from the contents list (scrolling happens on <html>) */
+:global(html):has(.page) {
+  scroll-behavior: smooth;
+}
+
+.rise {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.delay1 { animation-delay: 0.08s; }
+.delay2 { animation-delay: 0.16s; }
+.delay3 { animation-delay: 0.28s; }
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Offset anchor jumps so headings aren't flush against the viewport edge */
+.section {
+  scroll-margin-top: 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html):has(.page) { scroll-behavior: auto; }
+  .rise { opacity: 1; transform: none; animation: none; }
+}
