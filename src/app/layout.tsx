@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" className={poppins.variable}>
       <head>
         <link
           rel="preload"
@@ -45,7 +45,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className={poppins.variable}>
+      <body>
         <LanguageProvider>
           <NavWrapper />
           {children}
