@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Source_Serif_4 } from 'next/font/google';
 import styles from './support.module.css';
@@ -60,9 +61,10 @@ export default function SupportPage() {
         <div className="mx-auto max-w-3xl px-6 pt-8 pb-20 sm:pt-10 sm:pb-28">
           <Link
             href="/"
-            className={`${styles.rise} inline-block text-[11px] font-medium uppercase tracking-[0.3em] transition-opacity hover:opacity-75`}
+            className={`${styles.rise} inline-flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.3em] transition-opacity hover:opacity-75`}
             style={{ ...LABEL_FONT, color: GOLD }}
           >
+            <Image src="/app-icon.png" alt="" width={32} height={32} className="rounded-[8px]" />
             Shnayim Mikra
           </Link>
           <h1
@@ -84,7 +86,7 @@ export default function SupportPage() {
         {/* Contact */}
         <section className={`${styles.rise} ${styles.delay3} pt-16 pb-14 sm:pt-24 sm:pb-20`}>
           <p className="text-[11px] font-medium uppercase tracking-[0.3em]" style={{ ...LABEL_FONT, color: GOLD }}>
-            ◇ Contact ◇
+            Contact
           </p>
           <p className="mt-6 max-w-xl">
             For questions, technical issues, corrections, or feedback, contact:
@@ -114,7 +116,7 @@ export default function SupportPage() {
         {/* Topics */}
         <div className={`${styles.rise} ${styles.delay4}`}>
           <p className="pb-6 text-[11px] font-medium uppercase tracking-[0.3em]" style={{ ...LABEL_FONT, color: GOLD }}>
-            ◇ Common Support Topics ◇
+            Common Support Topics
           </p>
 
           <Topic title="Sign-in or account problems">
@@ -144,7 +146,7 @@ export default function SupportPage() {
             <ul className="space-y-2 pt-1">
               {['Hebrew', 'Targum', 'English translation', 'aliyah divisions', 'other text issues'].map((item) => (
                 <li key={item} className="flex gap-3">
-                  <span className="mt-[0.75em] h-1 w-1 shrink-0 rotate-45" style={{ background: GOLD }} aria-hidden />
+                  <span className="mt-[0.75em] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: GOLD }} aria-hidden />
                   <span>{item}</span>
                 </li>
               ))}

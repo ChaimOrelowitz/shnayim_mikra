@@ -59,6 +59,11 @@ const PESUKIM = [
 ];
 const TARGUM = "בְּקַדְמִין בְּרָא יְיָ יָת שְׁמַיָּא וְיָת אַרְעָא:";
 
+const TARGUM_2_3 = [
+  "וְאַרְעָא הֲוַת צָדְיָא וְרֵיקַנְיָא וַחֲשׁוֹכָא פָּרַשׂ עַל אַפֵּי תְהוֹמָא וְרוּחָא מִן קֳדָם יְיָ מְנַשְּׁבָא עַל אַפֵּי מַיָּא:",
+  "וַאֲמַר יְיָ יְהֵי נְהוֹרָא וַהֲוָה נְהוֹרָא:",
+];
+
 // Rashi with nikud, and the English translation, for the reader sample.
 // (Doubled vowel marks in the corpus Rashi are collapsed for display.)
 const RASHI_DIBBUR_NIKUD = "בראשית";
@@ -212,11 +217,12 @@ function ProgressMarks() {
             style={{ borderColor: RULE, color: done ? INK : FAINT }}
           >
             <span>{a}</span>
-            <span
-              className="h-[11px] w-[11px] rotate-45"
-              style={done ? { background: GOLD } : { border: `1.5px solid ${RULE}` }}
-              aria-label={done ? 'complete' : 'not yet'}
-            />
+            <span className="flex h-[13px] w-[13px] items-center justify-center" aria-label={done ? 'complete' : 'not yet'}>
+              <span
+                className="rounded-full"
+                style={done ? { width: 8, height: 8, background: GOLD } : { width: 5, height: 5, background: 'rgba(26, 37, 56, 0.30)' }}
+              />
+            </span>
           </li>
         );
       })}
@@ -224,22 +230,41 @@ function ProgressMarks() {
   );
 }
 
-// A few pesukim with a ribbon marking where reading stopped
+// Two pesukim as the reader shows them, with a ribbon at the bookmark. Like the
+// app, pesukim before the bookmarked one are dimmed.
 function BookmarkPage() {
+  const rows = [
+    { ref: 'א:ב', mikra: PESUKIM[1], targum: TARGUM_2_3[0], before: true },
+    { ref: 'א:ג', mikra: PESUKIM[2], targum: TARGUM_2_3[1], before: false },
+  ];
   return (
-    <figure className="relative mx-auto w-full max-w-[30rem] rounded-[1.5rem] px-8 pt-28 pb-10 sm:px-12" style={{ background: PARCHMENT }}>
+    <figure className="relative mx-auto w-full max-w-[30rem] rounded-[1.5rem] px-7 pt-24 pb-9 sm:px-10" style={{ background: PARCHMENT }}>
       <span
         aria-hidden
-        className="absolute -top-3 left-10 h-24 w-6 sm:left-14"
+        className="absolute -top-3 left-9 h-20 w-6 sm:left-12"
         style={{ background: GOLD, clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%)' }}
       />
-      <div dir="rtl" lang="he" className="font-hebrew space-y-5 text-[1.3rem] leading-[1.85] sm:text-[1.5rem]">
-        {PESUKIM.map((p, i) => (
-          <p key={p} style={{ color: i === 2 ? INK : FAINT }}>
-            {p}
-          </p>
-        ))}
-      </div>
+      {rows.map((r, i) => (
+        <div key={r.ref} className={i > 0 ? 'mt-7 border-t pt-6' : ''} style={{ borderColor: RULE, opacity: r.before ? 0.4 : 1 }}>
+          <div className="flex justify-end">
+            <span
+              className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+              style={{ ...LABEL_FONT, background: r.before ? 'transparent' : GOLD, color: r.before ? FAINT : BG_DARK }}
+              lang="he"
+            >
+              {r.ref}
+            </span>
+          </div>
+          <div dir="rtl" lang="he" className="font-hebrew mt-3 space-y-3" style={{ color: INK }}>
+            <p className="text-[1.3rem] leading-[1.65] sm:text-[1.45rem]">{r.mikra}</p>
+            <p className="text-[1.1rem] leading-[1.65] sm:text-[1.2rem]">{r.mikra}</p>
+            <p className="flex items-stretch gap-3 text-[1rem] leading-[1.7] sm:text-[1.1rem]" style={{ color: TARGUM_INK }}>
+              <span className="w-[2px] shrink-0" style={{ background: 'rgba(38, 77, 157, 0.4)' }} aria-hidden />
+              <span>{r.targum}</span>
+            </p>
+          </div>
+        </div>
+      ))}
     </figure>
   );
 }
@@ -266,7 +291,7 @@ export default async function LandingPage({
       <section className="relative flex min-h-[100svh] flex-col" style={{ background: BG_DARK }}>
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 pt-7 sm:px-10 sm:pt-9">
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/apple-touch-icon.png" alt="" width={36} height={36} className="rounded-[9px]" priority />
+            <Image src="/app-icon.png" alt="" width={36} height={36} className="rounded-[9px]" priority />
             <span className="text-[11px] font-medium uppercase tracking-[0.32em]" style={{ ...LABEL_FONT, color: AMBER }}>
               Shnayim Mikra
             </span>
@@ -400,9 +425,6 @@ export default async function LandingPage({
               }}
             />
           )}
-          <p className="mx-auto mt-8 max-w-xl text-[15px] leading-[1.8]" style={{ color: MUTED }}>
-            Each pasuk twice in Hebrew, then Targum Onkelos.
-          </p>
         </div>
 
         <ul className="mx-auto mt-24 max-w-3xl text-left sm:mt-32">
@@ -445,7 +467,7 @@ export default async function LandingPage({
                 'Single and double parshiyot handled correctly.',
               ].map((line) => (
                 <li key={line} className="flex items-baseline gap-4 border-b py-5" style={{ borderColor: RULE, color: INK }}>
-                  <span className="h-[7px] w-[7px] shrink-0 -translate-y-[3px] rotate-45" style={{ background: GOLD }} aria-hidden />
+                  <span className="h-[7px] w-[7px] shrink-0 -translate-y-[3px] rounded-full" style={{ background: GOLD }} aria-hidden />
                   {line}
                 </li>
               ))}
@@ -461,6 +483,13 @@ export default async function LandingPage({
       <section style={{ background: BG_DARK }}>
         <div className="mx-auto max-w-4xl px-6 py-40 text-center sm:px-10 sm:py-56">
           <div data-reveal className={reveal}>
+            <Image
+              src="/app-icon.png"
+              alt="Shnayim Mikra app icon"
+              width={96}
+              height={96}
+              className="mx-auto mb-12 h-[84px] w-[84px] rounded-[22.5%] shadow-[0_24px_60px_-20px_rgba(212,165,116,0.35)] sm:mb-14 sm:h-[96px] sm:w-[96px]"
+            />
             <h2 className={`${display.className} text-[2.9rem] font-medium leading-[1.05] sm:text-[4.75rem]`} style={{ color: PARCHMENT }}>
               Make Shnayim Mikra part of the week.
             </h2>

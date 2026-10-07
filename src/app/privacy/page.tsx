@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Source_Serif_4 } from 'next/font/google';
 import styles from './privacy.module.css';
@@ -56,7 +57,7 @@ function Section({ id, children }: { id: SectionId; children: React.ReactNode })
     <section id={id} className={`${styles.section} pt-12 sm:pt-14`}>
       <div className="mb-6 flex items-center gap-3" aria-hidden>
         <span className="h-px w-8" style={{ background: GOLD }} />
-        <span className="text-[10px]" style={{ color: GOLD }}>◇</span>
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: GOLD }} />
       </div>
       <h2
         className={`${display.className} mb-5 text-[1.75rem] sm:text-[2rem] font-semibold leading-tight`}
@@ -85,7 +86,7 @@ function List({ items }: { items: string[] }) {
     <ul className="space-y-2 py-1">
       {items.map((item) => (
         <li key={item} className="flex gap-3">
-          <span className="mt-[0.7em] h-1 w-1 shrink-0 rotate-45" style={{ background: GOLD }} aria-hidden />
+          <span className="mt-[0.7em] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: GOLD }} aria-hidden />
           <span>{item}</span>
         </li>
       ))}
@@ -101,9 +102,10 @@ export default function PrivacyPage() {
         <div className="mx-auto max-w-2xl px-6 pt-8 pb-16 sm:pt-10 sm:pb-20">
           <Link
             href="/"
-            className={`${styles.rise} inline-block text-[11px] font-medium uppercase tracking-[0.3em] transition-opacity hover:opacity-75`}
+            className={`${styles.rise} inline-flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.3em] transition-opacity hover:opacity-75`}
             style={{ ...LABEL_FONT, color: GOLD }}
           >
+            <Image src="/app-icon.png" alt="" width={32} height={32} className="rounded-[8px]" />
             Shnayim Mikra
           </Link>
           <h1
@@ -142,7 +144,7 @@ export default function PrivacyPage() {
         {/* Contents */}
         <nav aria-label="Contents" className="mt-12 border-y py-8" style={{ borderColor: '#e2d5b5' }}>
           <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.3em]" style={{ ...LABEL_FONT, color: GOLD }}>
-            ◇ Contents ◇
+            Contents
           </p>
           <ol className="grid gap-x-8 gap-y-1.5 text-[0.9375rem] sm:grid-cols-2">
             {SECTIONS.map(([id, title]) => (
